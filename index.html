@@ -15,6 +15,8 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SDK Oficial do Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       background-color: #0b1120;
@@ -27,7 +29,7 @@
   </style>
 </head>
 <body class="min-h-screen pb-28 selection:bg-indigo-500 selection:text-white relative">
-  <!-- Container Responsivo: max-w-md no mobile, expande até max-w-6xl no notebook/PC -->
+  <!-- Container Responsivo -->
   <div class="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 sm:px-6 pt-6">
 
     <!-- Cabeçalho -->
@@ -94,7 +96,7 @@
     <main id="lista-musicas" class="space-y-8 pt-1">
       <div class="text-center py-16 text-slate-500 text-sm">
         <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2.5 text-indigo-400"></i>
-        Buscando...
+        A carregar louvores...
       </div>
     </main>
   </div>
@@ -115,7 +117,7 @@
     </button>
   </div>
 
-  <!-- Modal 1: Consultar Escala do Mês (Para Músicos) -->
+  <!-- Modal 1: Consultar Escala do Mês -->
   <div id="modal-consulta-escala" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -189,7 +191,7 @@
     </div>
   </div>
 
-  <!-- Modal 3: Editar Equipe do Culto (Ajuste Rápido no Dia) -->
+  <!-- Modal 3: Editar Equipe do Culto -->
   <div id="modal-editar-equipe-dia" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -216,7 +218,7 @@
     </div>
   </div>
 
-  <!-- Modal 4: Novo Louvor (com Observações) -->
+  <!-- Modal 4: Novo Louvor -->
   <div id="modal-louvor" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -315,7 +317,7 @@
     </div>
   </div>
 
-  <!-- Modal 6: Editar Louvor Item (com Observações) -->
+  <!-- Modal 6: Editar Louvor Item -->
   <div id="modal-editar-louvor-item" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -329,7 +331,7 @@
       </div>
 
       <form id="form-editar-louvor" onsubmit="salvarAlteracaoLouvor(event)" class="space-y-3 mt-4 text-xs">
-        <input type="hidden" id="edit-link-yt-antigo" />
+        <input type="hidden" id="edit-id-musica" />
         <input type="hidden" id="edit-data-alvo" />
 
         <div class="grid grid-cols-2 gap-3">
@@ -409,7 +411,11 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzkZZmDWoNs9MzMZch5sYRgrIR9oGlgQ2j6vU2PzlnN-d1hAJG8dyfOPwuZygQri9yv/exec";
+    // Inicialização direta do cliente Supabase
+    const SUPABASE_URL = "https://rpqcochkumiwqhsvaxbn.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_zes3bxMmZ2T5OCb_6Ep2dA_JlBn8t-I";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const CACHE_KEY = "repertorio_louvor_cache";
     const PIN_ACESSO = "1234";
 
@@ -439,6 +445,16 @@
       return match ? match[1] : null;
     }
 
+    async function buscarTituloYouTube(url) {
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+        const json = await res.json();
+        return json.title || "Novo Louvor";
+      } catch (e) {
+        return "Novo Louvor";
+      }
+    }
+
     function padronizarMesAno(str) {
       if (!str) return null;
       let s = String(str).trim();
@@ -456,12 +472,10 @@
         if (partes.length === 2) {
           let m = partes[0].trim();
           const a = partes[1].trim();
-
           const mNum = parseInt(m, 10);
           if (!isNaN(mNum) && mNum >= 1 && mNum <= 12) {
             m = NOMES_MESES[mNum - 1];
           }
-
           const mCap = m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
           return `${mCap}/${a}`;
         }
@@ -571,9 +585,7 @@
       lucide.createIcons();
     }
 
-    // ==========================================
-    // DISPARO WHATSAPP (Links Nativos)
-    // ==========================================
+    // Disparos WhatsApp
     function enviarLembreteCultoWhatsApp(dataCulto, diaSemana) {
       const louvoresDesteCulto = todasMusicas.filter(m => parseDataInfo(obterCampo(m, ["data", "date"])).formatada === dataCulto);
 
@@ -599,7 +611,7 @@
         texto += `👥 *Escala de Hoje:*\n${listaFormatada}\n\n`;
       }
 
-      texto += `Cifras, letras e áudios disponíveis no app:\nhttps://repertoriolouvor.vercel.app`;
+      texto += `Cifras, letras e áudios disponíveis no app Scord:\n${window.location.origin}`;
 
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
@@ -644,7 +656,7 @@
         texto += `*${item.data} (${item.dia})* - ${item.funcao}\n`;
       });
 
-      texto += `\nConsulte cifras e repertório completo no aplicativo:\nhttps://repertoriolouvor.vercel.app`;
+      texto += `\nConsulte cifras e repertório completo no aplicativo:\n${window.location.origin}`;
 
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
@@ -664,9 +676,7 @@
       }
     }
 
-    // ==========================================
-    // CONSULTA ESCALA MENSAL (Músicos)
-    // ==========================================
+    // Consulta Escala
     function abrirModalConsultaEscala() {
       const seletor = document.getElementById("seletor-filtro-musico");
 
@@ -751,9 +761,7 @@
       }
     }
 
-    // ==========================================
-    // CRIAR ESCALA MENSAL (Com Funções por Culto)
-    // ==========================================
+    // Criar Escala Mensal
     function abrirModalEscalarMusico() {
       const seletorNome = document.getElementById("escala-nome-membro");
       if (todosMembros.length === 0) {
@@ -886,42 +894,39 @@
 
       const mapaMarcadas = new Map(datasMarcadas.map(d => [d.data, d.funcao]));
 
-      todasDatasMes.forEach(item => {
+      for (const item of todasDatasMes) {
         let esc = todasEscalas.find(e => e.data === item.data);
         const estaMarcado = mapaMarcadas.has(item.data);
 
+        let novoIntegrantes = "";
         if (esc) {
           let lista = (esc.integrantes || "").split(",").map(s => s.trim()).filter(Boolean);
           lista = lista.filter(s => !s.startsWith(musico + " (") && s !== musico);
           if (estaMarcado) {
             lista.push(`${musico} (${mapaMarcadas.get(item.data)})`);
           }
-          esc.integrantes = lista.join(", ");
+          novoIntegrantes = lista.join(", ");
+          esc.integrantes = novoIntegrantes;
         } else if (estaMarcado) {
+          novoIntegrantes = `${musico} (${mapaMarcadas.get(item.data)})`;
           todasEscalas.push({
             data: item.data,
             dia: item.dia,
             mes_ano: padronizarMesAno(item.mes_ano),
-            integrantes: `${musico} (${mapaMarcadas.get(item.data)})`
+            integrantes: novoIntegrantes
           });
         }
-      });
+
+        // Persistência direta no Supabase
+        await db
+          .from("musicas")
+          .update({ integrantes: novoIntegrantes })
+          .eq("data", item.data);
+      }
 
       localStorage.setItem(CACHE_KEY, JSON.stringify({ repertorio: todasMusicas, membros: todosMembros, escalas: todasEscalas }));
       fecharModalEscalarMusico();
       renderizarCards();
-
-      await fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          acao: "atribuir_musico_datas",
-          nome: musico,
-          todas_datas_mes: todasDatasMes,
-          datas_marcadas: datasMarcadas
-        })
-      });
 
       btn.disabled = false;
       btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Salvar Escala do Músico`;
@@ -929,9 +934,7 @@
       alert(`Escala de ${musico} atualizada com sucesso!`);
     }
 
-    // ==========================================
-    // EDITAR EQUIPE DO CULTO PONTUAL
-    // ==========================================
+    // Editar Equipe Pontual do Culto
     function abrirModalEditarEquipeDia(dataTexto, diaSemana) {
       dataEquipeEmEdicao = dataTexto;
       diaSemanaEquipeEmEdicao = diaSemana;
@@ -1013,36 +1016,27 @@
         }
       });
 
+      // Atualiza na base de dados do Supabase
+      await db
+        .from("musicas")
+        .update({ integrantes: equipeTexto })
+        .eq("data", dataEquipeEmEdicao);
+
       localStorage.setItem(CACHE_KEY, JSON.stringify({ repertorio: todasMusicas, membros: todosMembros, escalas: todasEscalas }));
       fecharModalEditarEquipeDia();
       renderizarCards();
-
-      await fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          acao: "atualizar_equipe_dia",
-          data: dataEquipeEmEdicao,
-          dia: diaSemanaEquipeEmEdicao,
-          mes_ano: mesAtual,
-          integrantes: equipeTexto
-        })
-      });
 
       btn.disabled = false;
       btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Equipe`;
       lucide.createIcons();
     }
 
-    // ==========================================
-    // NOVO LOUVOR & EDIÇÃO DE LOUVORES
-    // ==========================================
+    // Louvores
     function abrirModalNovoLouvor() {
       document.getElementById("modal-louvor").classList.remove("hidden");
     }
 
-    function fecharModalLouvor() {
+    function fecharModalNovoLouvor() {
       document.getElementById("modal-louvor").classList.add("hidden");
       document.getElementById("form-louvor").reset();
     }
@@ -1065,37 +1059,41 @@
       const dataCrua = document.getElementById("input-data").value;
       const [ano, mes, dia] = dataCrua.split("-");
       const dataFormatada = `${dia}/${mes}/${ano}`;
+      const linkYt = document.getElementById("input-yt").value.trim();
 
-      const payload = {
-        acao: "salvar_louvor",
+      // Busca automática do título via oEmbed do YouTube
+      const tituloExtraido = await buscarTituloYouTube(linkYt);
+
+      // Localiza equipe do culto existente para manter histórico
+      const esc = todasEscalas.find(e => e.data === dataFormatada);
+      const integrantesCulto = esc ? esc.integrantes : "";
+
+      const registro = {
         data: dataFormatada,
         dia: document.getElementById("input-dia").value,
-        ordem: document.getElementById("input-ordem").value,
+        ordem: parseInt(document.getElementById("input-ordem").value, 10),
+        titulo: tituloExtraido,
         tom: document.getElementById("input-tom").value,
         observacoes: document.getElementById("input-obs").value.trim(),
-        link_youtube: document.getElementById("input-yt").value.trim(),
+        link_youtube: linkYt,
         link_cifra: document.getElementById("input-cifra").value.trim(),
         link_letra: document.getElementById("input-letra").value.trim(),
-        link_spotify: document.getElementById("input-spotify").value.trim()
+        link_spotify: document.getElementById("input-spotify").value.trim(),
+        integrantes: integrantesCulto
       };
 
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+      const { error } = await db.from("musicas").insert([registro]);
 
-        fecharModalLouvor();
-        setTimeout(() => carregarRepertorio(true), 1500);
-      } catch (err) {
-        alert("Erro ao gravar louvor.");
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Salvar no Repertório`;
-        lucide.createIcons();
+      if (error) {
+        alert("Erro ao gravar louvor no Supabase: " + error.message);
+      } else {
+        fecharModalNovoLouvor();
+        await carregarRepertorio(true);
       }
+
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Salvar no Repertório`;
+      lucide.createIcons();
     }
 
     function abrirModalEditarCulto(dataTexto, diaSemana) {
@@ -1113,21 +1111,9 @@
           const tom = obterCampo(m, ["tom"]) || "N/D";
           const ord = obterCampo(m, ["ordem", "order"]) ? `#${obterCampo(m, ["ordem", "order"])}` : "";
           const obs = obterCampo(m, ["observacoes", "observacao", "obs", "notas"]) || "";
-          const linkYT = obterCampo(m, ["linkyoutube", "link_youtube", "youtube"]);
-          const linkCifra = obterCampo(m, ["linkcifra", "link_cifra", "cifra"]);
-          const linkLetra = obterCampo(m, ["linkletra", "link_letra", "letra"]);
-          const linkSpotify = obterCampo(m, ["linkspotify", "link_spotify", "spotify"]);
+          const idMusica = m.id;
 
-          const objStr = encodeURIComponent(JSON.stringify({
-            data: dataTexto,
-            ordem: obterCampo(m, ["ordem", "order"]),
-            tom: tom,
-            observacoes: obs,
-            link_youtube: linkYT,
-            link_cifra: linkCifra,
-            link_letra: linkLetra,
-            link_spotify: linkSpotify
-          }));
+          const objStr = encodeURIComponent(JSON.stringify(m));
 
           return `
             <div class="flex items-center justify-between bg-slate-800/80 px-3 py-2 rounded-xl text-xs gap-2">
@@ -1140,7 +1126,7 @@
                 <button onclick="abrirModalEditarLouvorItem('${objStr}')" class="text-indigo-300 hover:text-white p-1.5 bg-indigo-500/10 rounded-lg">
                   <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                 </button>
-                <button onclick="excluirLouvor('${dataTexto}', '${linkYT}')" class="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-lg">
+                <button onclick="excluirLouvor(${idMusica})" class="text-rose-400 hover:text-rose-300 p-1.5 bg-rose-500/10 rounded-lg">
                   <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 </button>
               </div>
@@ -1157,8 +1143,8 @@
 
     function abrirModalEditarLouvorItem(objJsonEncoded) {
       const dados = JSON.parse(decodeURIComponent(objJsonEncoded));
+      document.getElementById("edit-id-musica").value = dados.id;
       document.getElementById("edit-data-alvo").value = dados.data;
-      document.getElementById("edit-link-yt-antigo").value = dados.link_youtube;
       document.getElementById("edit-ordem").value = dados.ordem || "1";
       document.getElementById("edit-tom").value = dados.tom || "C";
       document.getElementById("edit-obs").value = dados.observacoes || "";
@@ -1180,59 +1166,49 @@
       btn.disabled = true;
       btn.innerText = "Atualizando...";
 
-      const payload = {
-        acao: "editar_louvor",
-        data: document.getElementById("edit-data-alvo").value,
-        link_youtube_antigo: document.getElementById("edit-link-yt-antigo").value,
-        ordem: document.getElementById("edit-ordem").value,
+      const id = document.getElementById("edit-id-musica").value;
+      const linkYt = document.getElementById("edit-yt").value.trim();
+      const tituloAtualizado = await buscarTituloYouTube(linkYt);
+
+      const updates = {
+        ordem: parseInt(document.getElementById("edit-ordem").value, 10),
         tom: document.getElementById("edit-tom").value,
         observacoes: document.getElementById("edit-obs").value.trim(),
-        link_youtube: document.getElementById("edit-yt").value.trim(),
+        link_youtube: linkYt,
+        titulo: tituloAtualizado,
         link_cifra: document.getElementById("edit-cifra").value.trim(),
         link_letra: document.getElementById("edit-letra").value.trim(),
         link_spotify: document.getElementById("edit-spotify").value.trim()
       };
 
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+      const { error } = await db.from("musicas").update(updates).eq("id", id);
 
+      if (error) {
+        alert("Erro ao atualizar no Supabase: " + error.message);
+      } else {
         fecharModalEditarLouvorItem();
         fecharModalEditarCulto();
-        setTimeout(() => carregarRepertorio(true), 1500);
-      } catch (err) {
-        alert("Erro ao atualizar louvor.");
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Louvor`;
-        lucide.createIcons();
+        await carregarRepertorio(true);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Louvor`;
+      lucide.createIcons();
+    }
+
+    async function excluirLouvor(id) {
+      if (!confirm("Remover este louvor da escala?")) return;
+
+      const { error } = await db.from("musicas").delete().eq("id", id);
+      if (error) {
+        alert("Erro ao remover: " + error.message);
+      } else {
+        fecharModalEditarCulto();
+        await carregarRepertorio(true);
       }
     }
 
-    async function excluirLouvor(dataTexto, linkYT) {
-      if (!confirm("Remover este louvor da escala?")) return;
-
-      todasMusicas = todasMusicas.filter(m => {
-        const info = parseDataInfo(obterCampo(m, ["data", "date"]));
-        const link = obterCampo(m, ["linkyoutube", "link_youtube", "youtube"]);
-        return !(info.formatada === dataTexto && link === linkYT);
-      });
-      fecharModalEditarCulto();
-      renderizarCards();
-
-      await fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ acao: "excluir_louvor", data: dataTexto, link_youtube: linkYT })
-      });
-    }
-
-    // Modal Membros
+    // Gestão de Membros
     function abrirModalMembros() {
       document.getElementById("modal-membros").classList.remove("hidden");
       renderizarListaMembros();
@@ -1271,34 +1247,32 @@
         return;
       }
 
+      const { error } = await db.from("membros").insert([{ nome: nome, ativo: true }]);
+      if (error) {
+        alert("Erro ao cadastrar membro: " + error.message);
+        return;
+      }
+
       todosMembros.push(nome);
       todosMembros.sort();
       renderizarListaMembros();
       input.value = "";
-
-      fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ acao: "adicionar_membro", nome: nome })
-      });
     }
 
     async function excluirMembro(nome) {
       if (!confirm(`Remover ${nome} da equipe de louvor?`)) return;
 
+      const { error } = await db.from("membros").delete().eq("nome", nome);
+      if (error) {
+        alert("Erro ao excluir: " + error.message);
+        return;
+      }
+
       todosMembros = todosMembros.filter(m => m !== nome);
       renderizarListaMembros();
-
-      fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ acao: "excluir_membro", nome: nome })
-      });
     }
 
-    // Leitura, Sincronização e Renderização
+    // Determinação do Culto em Destaque
     function determinarCultoDestaque() {
       const datasMap = new Map();
       const hoje = new Date();
@@ -1385,44 +1359,60 @@
           atualizarBotoesFiltro();
           renderizarCards();
         } catch (e) {
-          console.error("Erro ao ler cache:", e);
+          console.error("Erro ao ler cache local:", e);
         }
       }
       carregarRepertorio(false);
     }
 
+    // Leitura Direta do Supabase
     async function carregarRepertorio(forcado = false) {
       const iconRefresh = document.getElementById("icon-refresh");
       if (iconRefresh) iconRefresh.classList.add("animate-spin");
 
       try {
-        const res = await fetch(`${API_URL}?t=${Date.now()}`);
-        const data = await res.json();
+        const [respMusicas, respMembros] = await Promise.all([
+          db.from("musicas").select("*").order("ordem", { ascending: true }),
+          db.from("membros").select("nome").eq("ativo", true).order("nome", { ascending: true })
+        ]);
 
-        let rep = [];
-        let mem = [];
-        let esc = [];
+        if (respMusicas.error) console.error("Erro ao carregar músicas:", respMusicas.error);
+        if (respMembros.error) console.error("Erro ao carregar membros:", respMembros.error);
 
-        if (Array.isArray(data)) {
-          rep = data;
-        } else if (data) {
-          rep = data.repertorio || [];
-          mem = data.membros || [];
-          esc = (data.escalas || []).map(e => ({ ...e, mes_ano: padronizarMesAno(e.mes_ano) || e.mes_ano }));
-        }
+        const musicasCarregadas = respMusicas.data || [];
+        const membrosCarregados = (respMembros.data || []).map(m => m.nome);
 
-        if (rep.length > 0 || mem.length > 0 || esc.length > 0) {
-          todasMusicas = rep;
-          todosMembros = mem;
-          todasEscalas = esc;
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ repertorio: rep, membros: mem, escalas: esc }));
-          determinarCultoDestaque();
-          atualizarSeletorMeses();
-          atualizarBotoesFiltro();
-          renderizarCards();
-        }
+        // Agrupa as escalas com base nos integrantes salvos por culto
+        const mapaEscalas = new Map();
+        musicasCarregadas.forEach(m => {
+          if (m.data && !mapaEscalas.has(m.data)) {
+            mapaEscalas.set(m.data, {
+              data: m.data,
+              dia: m.dia,
+              mes_ano: parseDataInfo(m.data).mesAno,
+              integrantes: m.integrantes || ""
+            });
+          }
+        });
+
+        const escalasCarregadas = Array.from(mapaEscalas.values());
+
+        todasMusicas = musicasCarregadas;
+        todosMembros = membrosCarregados;
+        todasEscalas = escalasCarregadas;
+
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ 
+          repertorio: todasMusicas, 
+          membros: todosMembros, 
+          escalas: todasEscalas 
+        }));
+
+        determinarCultoDestaque();
+        atualizarSeletorMeses();
+        atualizarBotoesFiltro();
+        renderizarCards();
       } catch (err) {
-        console.error("Erro na sincronização:", err);
+        console.error("Erro na comunicação com Supabase:", err);
       } finally {
         if (iconRefresh) iconRefresh.classList.remove("animate-spin");
         lucide.createIcons();
@@ -1472,7 +1462,7 @@
         }
       });
 
-      // 2. Músicas (Com proteção anti-duplicação rigorosa)
+      // 2. Músicas
       const chavesUnicasAdicionadas = new Set();
 
       todasMusicas.forEach(m => {
@@ -1501,7 +1491,7 @@
 
           const linkYT = obterCampo(m, ["linkyoutube", "link_youtube", "youtube"]) || "";
           const ordem = obterCampo(m, ["ordem", "order"]) || "";
-          const chaveItem = `${info.formatada}_${ordem}_${linkYT}`;
+          const chaveItem = `${m.id || info.formatada + '_' + ordem + '_' + linkYT}`;
 
           if (!chavesUnicasAdicionadas.has(chaveItem)) {
             chavesUnicasAdicionadas.add(chaveItem);
@@ -1572,7 +1562,7 @@
                     ${linkYT ? `
                       <a href="${linkYT}" target="_blank" rel="noopener noreferrer" 
                          class="absolute inset-0 flex items-center justify-center bg-black/35 hover:bg-black/20 transition group">
-                        <div class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg transition transform group-hover:scale-110 active:scale-95">
+                        <div class="w-12 h-12 rounded-lg bg-red-600 text-white flex items-center justify-center shadow-lg transition transform group-hover:scale-110 active:scale-95">
                           <i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
                         </div>
                       </a>
@@ -1643,7 +1633,6 @@
           }).join("");
         }
 
-        // Botões de Ação da Liderança no Culto (com botão WhatsApp compacto)
         const botoesLiderancaCulto = isAdmin ? `
           <div class="flex items-center gap-1.5">
             ${grupo.itens.length > 0 ? `
@@ -1686,7 +1675,6 @@
               ${botoesLiderancaCulto}
             </div>
             ${escalaHtml}
-            <!-- Grade Responsiva: 1 col no celular, 2 cols em tablets, 3 cols no PC -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               ${cardsHtml}
             </div>
