@@ -29,7 +29,7 @@
   </style>
 </head>
 <body class="min-h-screen pb-28 selection:bg-indigo-500 selection:text-white relative">
-  <!-- Container Responsivo -->
+  <!-- Container Principal -->
   <div class="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 sm:px-6 pt-6">
 
     <!-- Cabeçalho -->
@@ -72,31 +72,14 @@
       </select>
     </div>
 
-    <!-- Barra de Filtros -->
-    <div class="flex gap-2 overflow-x-auto py-3 no-scrollbar items-center" id="container-filtros">
-      <button onclick="filtrarDia('PROXIMO')" data-filtro="PROXIMO" id="btn-filtro-proximo" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-indigo-600 text-white shadow-sm whitespace-nowrap transition flex items-center gap-1.5">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-200"></i>
-        <span id="label-proximo">Próximo Culto</span>
-      </button>
-      <button onclick="filtrarDia('TODOS')" data-filtro="TODOS" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700/50 whitespace-nowrap transition">
-        Todos
-      </button>
-      <button onclick="filtrarDia('Quinta')" data-filtro="Quinta" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700/50 whitespace-nowrap transition">
-        Quintas
-      </button>
-      <button onclick="filtrarDia('Sábado')" data-filtro="Sábado" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700/50 whitespace-nowrap transition">
-        Sábados
-      </button>
-      <button onclick="filtrarDia('Domingo')" data-filtro="Domingo" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700/50 whitespace-nowrap transition">
-        Domingos
-      </button>
-    </div>
+    <!-- Barra de Filtros Dinâmica -->
+    <div class="flex gap-2 overflow-x-auto py-3 no-scrollbar items-center" id="container-filtros"></div>
 
-    <!-- Lista Principal -->
+    <!-- Lista Principal de Cultos e Louvores -->
     <main id="lista-musicas" class="space-y-8 pt-1">
       <div class="text-center py-16 text-slate-500 text-sm">
         <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2.5 text-indigo-400"></i>
-        A carregar louvores...
+        Carregando programação de cultos...
       </div>
     </main>
   </div>
@@ -107,8 +90,8 @@
       <i data-lucide="users" class="w-3.5 h-3.5 text-sky-400"></i>
       Músicos
     </button>
-    <button onclick="abrirModalEscalarMusico()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-2 rounded-2xl shadow-xl flex items-center justify-center gap-1.5 text-xs active:scale-95 transition">
-      <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+    <button onclick="abrirModalEscalarCulto()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-2 rounded-2xl shadow-xl flex items-center justify-center gap-1.5 text-xs active:scale-95 transition">
+      <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
       Criar Escala
     </button>
     <button onclick="abrirModalNovoLouvor()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-2 rounded-2xl shadow-xl flex items-center justify-center gap-1.5 text-xs border border-indigo-400/30 active:scale-95 transition">
@@ -150,41 +133,46 @@
     </div>
   </div>
 
-  <!-- Modal 2: Criar / Atribuir Escala Mensal -->
-  <div id="modal-escalar-musico" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
+  <!-- Modal 2: Criar Escala Livre por Data (Calendário Suspenso) -->
+  <div id="modal-escalar-culto" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="calendar-check" class="w-4 h-4 text-amber-400"></i>
-          Atribuir Escala Mensal
-        </h3>
-        <button onclick="fecharModalEscalarMusico()" class="text-slate-400 hover:text-white p-1">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i data-lucide="calendar-plus" class="w-4 h-4 text-amber-400"></i>
+            Criar Escala de Culto
+          </h3>
+          <p class="text-[11px] text-slate-400">Selecione a data para programar o culto</p>
+        </div>
+        <button onclick="fecharModalEscalarCulto()" class="text-slate-400 hover:text-white p-1">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <form id="form-escalar-musico" onsubmit="salvarEscalaMusicoMes(event)" class="space-y-3 mt-4 text-xs">
-        <div>
-          <label class="block text-slate-300 font-semibold mb-1">Selecione o Integrante *</label>
-          <select id="escala-nome-membro" onchange="atualizarChecksMusicoSelecionado()" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-indigo-500">
-          </select>
+      <form id="form-escalar-culto" onsubmit="salvarEscalaCultoData(event)" class="space-y-3 mt-4 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">Data do Culto *</label>
+            <input type="date" id="escala-input-data" required onchange="aoMudarDataEscalaCulto(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">Dia da Semana</label>
+            <input type="text" id="escala-input-dia" readonly class="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-indigo-300 font-bold outline-none" />
+          </div>
         </div>
 
         <div class="pt-2 border-t border-slate-800">
           <div class="flex items-center justify-between mb-2">
-            <label class="block text-slate-300 font-semibold">Marque os Cultos e Funções:</label>
-            <span class="text-[10px] text-indigo-400 font-medium" id="label-mes-alvo-escala"></span>
+            <label class="block text-slate-300 font-semibold">Integrantes e Funções deste Culto:</label>
+            <button type="button" onclick="marcarTodosMembrosEscala(false)" class="text-[10px] text-slate-400 hover:text-rose-400">Limpar seleções</button>
           </div>
-          <div id="container-dias-para-marcar" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+          <div id="container-membros-escala-culto" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
         </div>
 
-        <div class="flex items-center gap-2 mt-4">
-          <button type="submit" id="btn-submit-escala-mes" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5">
+        <div class="flex items-center gap-2 mt-4 pt-2 border-t border-slate-800">
+          <button type="submit" id="btn-submit-escala-culto" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5">
             <i data-lucide="check" class="w-4 h-4"></i>
-            Salvar Escala do Músico
-          </button>
-          <button type="button" onclick="enviarEscalaPrivadoSelecionado()" title="Enviar escala no WhatsApp deste integrante" class="w-10 h-10 rounded-xl bg-emerald-950/70 border border-emerald-500/40 hover:bg-emerald-900/60 active:scale-95 transition flex items-center justify-center shrink-0">
-            <img src="whatsapp.png" alt="WhatsApp" class="w-5 h-5 object-contain" />
+            Salvar Culto na Programação
           </button>
         </div>
       </form>
@@ -416,7 +404,7 @@
     const SUPABASE_ANON_KEY = "sb_publishable_zes3bxMmZ2T5OCb_6Ep2dA_JlBn8t-I";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const CACHE_KEY = "repertorio_louvor_cache";
+    const CACHE_KEY = "scord_app_cache_v2";
     const PIN_ACESSO = "1234";
 
     let todasMusicas = [];
@@ -427,7 +415,7 @@
     let dataCultoAlvo = null;
     let dataEquipeEmEdicao = null;
     let diaSemanaEquipeEmEdicao = null;
-    let isAdmin = localStorage.getItem("louvor_admin_ativo") === "true";
+    let isAdmin = localStorage.getItem("scord_admin_ativo") === "true";
 
     const NOMES_MESES = [
       "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -487,23 +475,6 @@
       if (!dataStr) return { formatada: "", mesAno: "", chaveOrdenacao: 0, dateObj: null };
       const str = String(dataStr).trim();
 
-      if (str.includes("GMT") || str.includes("Horário")) {
-        const dObj = new Date(str);
-        if (!isNaN(dObj.getTime())) {
-          const d = dObj.getDate();
-          const m = dObj.getMonth() + 1;
-          const a = dObj.getFullYear();
-          const dFmt = String(d).padStart(2, '0');
-          const mFmt = String(m).padStart(2, '0');
-          return {
-            formatada: `${dFmt}/${mFmt}/${a}`,
-            mesAno: `${NOMES_MESES[m - 1]}/${a}`,
-            chaveOrdenacao: (a * 10000) + (m * 100) + d,
-            dateObj: dObj
-          };
-        }
-      }
-
       let d = 0, m = 0, a = 0;
       if (str.includes("/")) {
         const partes = str.split("/");
@@ -550,7 +521,7 @@
       if (isAdmin) {
         if (confirm("Deseja sair do modo de liderança?")) {
           isAdmin = false;
-          localStorage.removeItem("louvor_admin_ativo");
+          localStorage.removeItem("scord_admin_ativo");
           atualizarInterfaceAdmin();
           renderizarCards();
         }
@@ -558,7 +529,7 @@
         const pin = prompt("Digite o PIN da liderança:");
         if (pin === PIN_ACESSO) {
           isAdmin = true;
-          localStorage.setItem("louvor_admin_ativo", "true");
+          localStorage.setItem("scord_admin_ativo", "true");
           atualizarInterfaceAdmin();
           renderizarCards();
         } else if (pin !== null) {
@@ -669,14 +640,7 @@
       }
     }
 
-    function enviarEscalaPrivadoSelecionado() {
-      const musico = document.getElementById("escala-nome-membro").value;
-      if (musico) {
-        dispararZapEscalaIndividual(musico);
-      }
-    }
-
-    // Consulta Escala
+    // Consulta Escala do Mês
     function abrirModalConsultaEscala() {
       const seletor = document.getElementById("seletor-filtro-musico");
 
@@ -761,177 +725,144 @@
       }
     }
 
-    // Criar Escala Mensal
-    function abrirModalEscalarMusico() {
-      const seletorNome = document.getElementById("escala-nome-membro");
+    // ==========================================
+    // CRIAR ESCALA LIVRE (CALENDÁRIO SUSPENSO)
+    // ==========================================
+    function abrirModalEscalarCulto() {
       if (todosMembros.length === 0) {
         alert("Cadastre integrantes no botão 'Músicos' primeiro.");
         return;
       }
 
-      seletorNome.innerHTML = todosMembros.map(m => `<option value="${m}">${m}</option>`).join("");
-      document.getElementById("label-mes-alvo-escala").innerText = `${mesAtual}`;
-      gerarDiasDoMesParaMarcar();
-      document.getElementById("modal-escalar-musico").classList.remove("hidden");
-      atualizarChecksMusicoSelecionado();
+      const inputData = document.getElementById("escala-input-data");
+      const hoje = new Date().toISOString().split("T")[0];
+      inputData.value = hoje;
+      aoMudarDataEscalaCulto(hoje);
+
+      document.getElementById("modal-escalar-culto").classList.remove("hidden");
     }
 
-    function fecharModalEscalarMusico() {
-      document.getElementById("modal-escalar-musico").classList.add("hidden");
+    function fecharModalEscalarCulto() {
+      document.getElementById("modal-escalar-culto").classList.add("hidden");
     }
 
-    function gerarDiasDoMesParaMarcar() {
-      const container = document.getElementById("container-dias-para-marcar");
-
-      let ano = new Date().getFullYear();
-      let mes = new Date().getMonth();
-
-      if (mesAtual !== "TODOS" && mesAtual.includes("/")) {
-        const [nomeM, anoStr] = mesAtual.split("/");
-        ano = parseInt(anoStr, 10);
-        mes = NOMES_MESES.findIndex(nm => nm.toLowerCase() === nomeM.toLowerCase());
-        if (mes === -1) mes = new Date().getMonth();
-      }
-
-      const totalDias = new Date(ano, mes + 1, 0).getDate();
-      const diasCulto = [];
+    function aoMudarDataEscalaCulto(dataIso) {
+      if (!dataIso) return;
+      const [ano, mes, dia] = dataIso.split("-");
+      const dObj = new Date(ano, mes - 1, dia);
       const nomesDias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+      const diaSemana = nomesDias[dObj.getDay()];
+      document.getElementById("escala-input-dia").value = diaSemana;
 
-      for (let dia = 1; dia <= totalDias; dia++) {
-        const dObj = new Date(ano, mes, dia);
-        const diaSemanaIndex = dObj.getDay();
-        if (diaSemanaIndex === 0 || diaSemanaIndex === 4 || diaSemanaIndex === 6) {
-          const dFmt = String(dia).padStart(2, '0') + '/' + String(mes + 1).padStart(2, '0') + '/' + ano;
-          diasCulto.push({
-            data: dFmt,
-            dia: nomesDias[diaSemanaIndex],
-            mes_ano: `${NOMES_MESES[mes]}/${ano}`
-          });
+      const dataFmt = `${dia}/${mes}/${ano}`;
+      carregarMembrosParaDataCulto(dataFmt);
+    }
+
+    function carregarMembrosParaDataCulto(dataFmt) {
+      const container = document.getElementById("container-membros-escala-culto");
+      const esc = todasEscalas.find(e => e.data === dataFmt);
+      const integrantesStr = esc ? (esc.integrantes || "") : "";
+
+      const optsFuncoes = LISTA_FUNCOES_PURAS.map(f => `<option value="${f}">${f}</option>`).join("");
+
+      container.innerHTML = todosMembros.map((nome, idx) => {
+        const estaMarcado = integrantesStr.toLowerCase().includes(nome.toLowerCase());
+        let funcaoSalva = "Voz";
+        if (estaMarcado) {
+          const match = integrantesStr.match(new RegExp(`${nome}\\s*\\(([^)]+)\\)`, "i"));
+          if (match) funcaoSalva = match[1];
         }
-      }
 
-      const optsPrincipal = LISTA_FUNCOES_PURAS.map(f => `<option value="${f}">${f}</option>`).join("");
-      const optsSecundaria = `<option value="">(Nenhuma)</option>` + LISTA_FUNCOES_PURAS.map(f => `<option value="${f}">${f}</option>`).join("");
-
-      container.innerHTML = diasCulto.map((item, idx) => `
-        <div class="bg-slate-800/60 border border-slate-700/50 p-2.5 rounded-2xl flex flex-col gap-2">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" id="check-dia-${idx}" data-data="${item.data}" value='${JSON.stringify(item)}' class="check-dia-escala w-4 h-4 rounded accent-amber-500 shrink-0" />
-            <span class="text-xs text-slate-100 font-bold">${item.dia} • ${item.data}</span>
-          </label>
-
-          <div class="grid grid-cols-2 gap-2 pl-6">
-            <div>
-              <span class="text-[10px] text-slate-400 block mb-0.5">Principal:</span>
-              <select id="funcao-p-${idx}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-emerald-400 font-semibold outline-none">
-                ${optsPrincipal}
-              </select>
-            </div>
-            <div>
-              <span class="text-[10px] text-slate-400 block mb-0.5">Secundária (Opcional):</span>
-              <select id="funcao-s-${idx}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-indigo-300 font-semibold outline-none">
-                ${optsSecundaria}
-              </select>
-            </div>
+        return `
+          <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/40">
+            <input type="checkbox" id="check-culto-membro-${idx}" value="${nome}" ${estaMarcado ? "checked" : ""} class="check-membro-culto-data w-4 h-4 rounded accent-amber-500 shrink-0 cursor-pointer" />
+            <label for="check-culto-membro-${idx}" class="text-xs text-slate-100 font-semibold flex-1 cursor-pointer truncate">${nome}</label>
+            <select id="funcao-culto-membro-${idx}" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-amber-300 font-semibold outline-none">
+              ${optsFuncoes}
+            </select>
           </div>
-        </div>
-      `).join("");
-    }
+        `;
+      }).join("");
 
-    function atualizarChecksMusicoSelecionado() {
-      const musico = document.getElementById("escala-nome-membro").value;
-      if (!musico) return;
-
-      document.querySelectorAll(".check-dia-escala").forEach((chk, idx) => {
-        const dataStr = chk.getAttribute("data-data");
-        const esc = todasEscalas.find(e => e.data === dataStr);
-        const selP = document.getElementById(`funcao-p-${idx}`);
-        const selS = document.getElementById(`funcao-s-${idx}`);
-
-        if (esc && esc.integrantes && esc.integrantes.includes(musico)) {
-          chk.checked = true;
-          const match = esc.integrantes.match(new RegExp(`${musico}\\s*\\(([^)]+)\\)`));
-          if (match) {
-            const funcaoCompleta = match[1];
-            if (funcaoCompleta.includes(" e ")) {
-              const [p, s] = funcaoCompleta.split(" e ");
-              if (selP) selP.value = p.trim();
-              if (selS) selS.value = s.trim();
-            } else {
-              if (selP) selP.value = funcaoCompleta.trim();
-              if (selS) selS.value = "";
-            }
-          }
-        } else {
-          chk.checked = false;
-          if (selS) selS.value = "";
+      todosMembros.forEach((nome, idx) => {
+        const sel = document.getElementById(`funcao-culto-membro-${idx}`);
+        if (sel && integrantesStr.toLowerCase().includes(nome.toLowerCase())) {
+          const match = integrantesStr.match(new RegExp(`${nome}\\s*\\(([^)]+)\\)`, "i"));
+          if (match) sel.value = match[1];
         }
       });
     }
 
-    async function salvarEscalaMusicoMes(e) {
+    function marcarTodosMembrosEscala(marcar = false) {
+      document.querySelectorAll(".check-membro-culto-data").forEach(chk => chk.checked = marcar);
+    }
+
+    async function salvarEscalaCultoData(e) {
       e.preventDefault();
-      const btn = document.getElementById("btn-submit-escala-mes");
+      const btn = document.getElementById("btn-submit-escala-culto");
       btn.disabled = true;
-      btn.innerText = "Gravando escala do mês...";
+      btn.innerText = "Salvando culto...";
 
-      const musico = document.getElementById("escala-nome-membro").value;
-      const todasDatasMes = [];
-      const datasMarcadas = [];
+      const dataIso = document.getElementById("escala-input-data").value;
+      const [ano, mes, dia] = dataIso.split("-");
+      const dataFmt = `${dia}/${mes}/${ano}`;
+      const diaSemana = document.getElementById("escala-input-dia").value;
+      const mesAno = `${NOMES_MESES[parseInt(mes, 10) - 1]}/${ano}`;
 
-      document.querySelectorAll(".check-dia-escala").forEach((chk, idx) => {
-        const obj = JSON.parse(chk.value);
-        const p = document.getElementById(`funcao-p-${idx}`).value;
-        const s = document.getElementById(`funcao-s-${idx}`).value;
-
-        const funcaoCombinada = (s && s !== p) ? `${p} e ${s}` : p;
-
-        todasDatasMes.push(obj);
+      const lista = [];
+      document.querySelectorAll(".check-membro-culto-data").forEach((chk, idx) => {
         if (chk.checked) {
-          datasMarcadas.push({ ...obj, funcao: funcaoCombinada });
+          const nome = chk.value;
+          const funcao = document.getElementById(`funcao-culto-membro-${idx}`).value;
+          lista.push(`${nome} (${funcao})`);
         }
       });
 
-      const mapaMarcadas = new Map(datasMarcadas.map(d => [d.data, d.funcao]));
+      const equipeTexto = lista.join(", ");
 
-      for (const item of todasDatasMes) {
-        let esc = todasEscalas.find(e => e.data === item.data);
-        const estaMarcado = mapaMarcadas.has(item.data);
+      try {
+        const { data: existente } = await db
+          .from("escalas")
+          .select("id")
+          .eq("data", dataFmt)
+          .maybeSingle();
 
-        let novoIntegrantes = "";
-        if (esc) {
-          let lista = (esc.integrantes || "").split(",").map(s => s.trim()).filter(Boolean);
-          lista = lista.filter(s => !s.startsWith(musico + " (") && s !== musico);
-          if (estaMarcado) {
-            lista.push(`${musico} (${mapaMarcadas.get(item.data)})`);
-          }
-          novoIntegrantes = lista.join(", ");
-          esc.integrantes = novoIntegrantes;
-        } else if (estaMarcado) {
-          novoIntegrantes = `${musico} (${mapaMarcadas.get(item.data)})`;
-          todasEscalas.push({
-            data: item.data,
-            dia: item.dia,
-            mes_ano: padronizarMesAno(item.mes_ano),
-            integrantes: novoIntegrantes
-          });
+        if (existente && existente.id) {
+          await db
+            .from("escalas")
+            .update({
+              dia: diaSemana,
+              mes_ano: mesAno,
+              integrantes: equipeTexto
+            })
+            .eq("id", existente.id);
+        } else {
+          await db
+            .from("escalas")
+            .insert([{
+              data: dataFmt,
+              dia: diaSemana,
+              mes_ano: mesAno,
+              integrantes: equipeTexto
+            }]);
         }
 
-        // Persistência direta no Supabase
         await db
           .from("musicas")
-          .update({ integrantes: novoIntegrantes })
-          .eq("data", item.data);
+          .update({ integrantes: equipeTexto })
+          .eq("data", dataFmt);
+
+        fecharModalEscalarCulto();
+        await carregarRepertorio(true);
+        alert(`Culto de ${diaSemana} (${dataFmt}) salvo com sucesso!`);
+      } catch (err) {
+        console.error("Erro ao gravar escala:", err);
+        alert("Erro ao gravar escala.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Salvar Culto na Programação`;
+        lucide.createIcons();
       }
-
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ repertorio: todasMusicas, membros: todosMembros, escalas: todasEscalas }));
-      fecharModalEscalarMusico();
-      renderizarCards();
-
-      btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Salvar Escala do Músico`;
-      lucide.createIcons();
-      alert(`Escala de ${musico} atualizada com sucesso!`);
     }
 
     // Editar Equipe Pontual do Culto
@@ -997,38 +928,46 @@
       });
 
       const equipeTexto = lista.join(", ");
+      const info = parseDataInfo(dataEquipeEmEdicao);
 
-      let esc = todasEscalas.find(e => e.data === dataEquipeEmEdicao);
-      if (esc) {
-        esc.integrantes = equipeTexto;
-      } else {
-        todasEscalas.push({
-          data: dataEquipeEmEdicao,
-          dia: diaSemanaEquipeEmEdicao,
-          mes_ano: mesAtual,
-          integrantes: equipeTexto
-        });
-      }
+      try {
+        const { data: existente } = await db
+          .from("escalas")
+          .select("id")
+          .eq("data", dataEquipeEmEdicao)
+          .maybeSingle();
 
-      todasMusicas.forEach(m => {
-        if (parseDataInfo(obterCampo(m, ["data", "date"])).formatada === dataEquipeEmEdicao) {
-          m.integrantes = equipeTexto;
+        if (existente && existente.id) {
+          await db
+            .from("escalas")
+            .update({ integrantes: equipeTexto })
+            .eq("id", existente.id);
+        } else {
+          await db
+            .from("escalas")
+            .insert([{
+              data: dataEquipeEmEdicao,
+              dia: diaSemanaEquipeEmEdicao,
+              mes_ano: info.mesAno,
+              integrantes: equipeTexto
+            }]);
         }
-      });
 
-      // Atualiza na base de dados do Supabase
-      await db
-        .from("musicas")
-        .update({ integrantes: equipeTexto })
-        .eq("data", dataEquipeEmEdicao);
+        await db
+          .from("musicas")
+          .update({ integrantes: equipeTexto })
+          .eq("data", dataEquipeEmEdicao);
 
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ repertorio: todasMusicas, membros: todosMembros, escalas: todasEscalas }));
-      fecharModalEditarEquipeDia();
-      renderizarCards();
-
-      btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Equipe`;
-      lucide.createIcons();
+        fecharModalEditarEquipeDia();
+        await carregarRepertorio(true);
+      } catch (err) {
+        console.error("Erro ao atualizar equipe:", err);
+        alert("Erro ao salvar alterações da equipe.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Equipe`;
+        lucide.createIcons();
+      }
     }
 
     // Louvores
@@ -1036,7 +975,7 @@
       document.getElementById("modal-louvor").classList.remove("hidden");
     }
 
-    function fecharModalNovoLouvor() {
+    function fecharModalLouvor() {
       document.getElementById("modal-louvor").classList.add("hidden");
       document.getElementById("form-louvor").reset();
     }
@@ -1061,10 +1000,8 @@
       const dataFormatada = `${dia}/${mes}/${ano}`;
       const linkYt = document.getElementById("input-yt").value.trim();
 
-      // Busca automática do título via oEmbed do YouTube
       const tituloExtraido = await buscarTituloYouTube(linkYt);
 
-      // Localiza equipe do culto existente para manter histórico
       const esc = todasEscalas.find(e => e.data === dataFormatada);
       const integrantesCulto = esc ? esc.integrantes : "";
 
@@ -1087,7 +1024,7 @@
       if (error) {
         alert("Erro ao gravar louvor no Supabase: " + error.message);
       } else {
-        fecharModalNovoLouvor();
+        fecharModalLouvor();
         await carregarRepertorio(true);
       }
 
@@ -1295,7 +1232,11 @@
       let selecionado = proximoOuHoje ? proximoOuHoje : datasOrdenadas[datasOrdenadas.length - 1];
       const ehHoje = selecionado && selecionado.dateObj.getTime() === hoje.getTime();
 
-      document.getElementById("label-proximo").innerText = ehHoje ? "Culto de Hoje" : "Próximo Culto";
+      const labelProximo = document.getElementById("label-proximo");
+      if (labelProximo) {
+        labelProximo.innerText = ehHoje ? "Culto de Hoje" : "Próximo Culto";
+      }
+
       dataCultoAlvo = selecionado ? selecionado.formatada : null;
 
       if (selecionado && selecionado.mesAno) mesAtual = padronizarMesAno(selecionado.mesAno) || selecionado.mesAno;
@@ -1340,8 +1281,8 @@
       mesAtual = padronizarMesAno(novoMes) || novoMes;
       if (diaAtual === "PROXIMO") {
         diaAtual = "TODOS";
-        atualizarBotoesFiltro();
       }
+      atualizarBotoesFiltrosDinamicos();
       renderizarCards();
     }
 
@@ -1354,9 +1295,9 @@
           todasMusicas = parsed.repertorio || [];
           todosMembros = parsed.membros || [];
           todasEscalas = (parsed.escalas || []).map(e => ({ ...e, mes_ano: padronizarMesAno(e.mes_ano) || e.mes_ano }));
-          determinarCultoDestaque();
           atualizarSeletorMeses();
-          atualizarBotoesFiltro();
+          atualizarBotoesFiltrosDinamicos();
+          determinarCultoDestaque();
           renderizarCards();
         } catch (e) {
           console.error("Erro ao ler cache local:", e);
@@ -1365,41 +1306,28 @@
       carregarRepertorio(false);
     }
 
-    // Leitura Direta do Supabase
+    // Leitura Direta do Supabase (Tabelas: musicas, membros e escalas)
     async function carregarRepertorio(forcado = false) {
       const iconRefresh = document.getElementById("icon-refresh");
       if (iconRefresh) iconRefresh.classList.add("animate-spin");
 
       try {
-        const [respMusicas, respMembros] = await Promise.all([
+        const [respMusicas, respMembros, respEscalas] = await Promise.all([
           db.from("musicas").select("*").order("ordem", { ascending: true }),
-          db.from("membros").select("nome").eq("ativo", true).order("nome", { ascending: true })
+          db.from("membros").select("nome").eq("ativo", true).order("nome", { ascending: true }),
+          db.from("escalas").select("*")
         ]);
 
-        if (respMusicas.error) console.error("Erro ao carregar músicas:", respMusicas.error);
-        if (respMembros.error) console.error("Erro ao carregar membros:", respMembros.error);
+        if (respMusicas.error) console.error("Erro músicas:", respMusicas.error);
+        if (respMembros.error) console.error("Erro membros:", respMembros.error);
+        if (respEscalas.error) console.error("Erro escalas:", respEscalas.error);
 
-        const musicasCarregadas = respMusicas.data || [];
-        const membrosCarregados = (respMembros.data || []).map(m => m.nome);
-
-        // Agrupa as escalas com base nos integrantes salvos por culto
-        const mapaEscalas = new Map();
-        musicasCarregadas.forEach(m => {
-          if (m.data && !mapaEscalas.has(m.data)) {
-            mapaEscalas.set(m.data, {
-              data: m.data,
-              dia: m.dia,
-              mes_ano: parseDataInfo(m.data).mesAno,
-              integrantes: m.integrantes || ""
-            });
-          }
-        });
-
-        const escalasCarregadas = Array.from(mapaEscalas.values());
-
-        todasMusicas = musicasCarregadas;
-        todosMembros = membrosCarregados;
-        todasEscalas = escalasCarregadas;
+        todasMusicas = respMusicas.data || [];
+        todosMembros = (respMembros.data || []).map(m => m.nome);
+        todasEscalas = (respEscalas.data || []).map(e => ({
+          ...e,
+          mes_ano: padronizarMesAno(e.mes_ano) || e.mes_ano
+        }));
 
         localStorage.setItem(CACHE_KEY, JSON.stringify({ 
           repertorio: todasMusicas, 
@@ -1407,9 +1335,9 @@
           escalas: todasEscalas 
         }));
 
-        determinarCultoDestaque();
         atualizarSeletorMeses();
-        atualizarBotoesFiltro();
+        atualizarBotoesFiltrosDinamicos();
+        determinarCultoDestaque();
         renderizarCards();
       } catch (err) {
         console.error("Erro na comunicação com Supabase:", err);
@@ -1419,20 +1347,55 @@
       }
     }
 
-    function atualizarBotoesFiltro() {
-      document.querySelectorAll(".filtro-btn").forEach((btn) => {
-        const tipo = btn.getAttribute("data-filtro");
-        if (tipo === diaAtual) {
-          btn.className = "filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-indigo-600 text-white shadow-sm whitespace-nowrap transition flex items-center gap-1.5";
-        } else {
-          btn.className = "filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700/50 whitespace-nowrap transition flex items-center gap-1.5";
+    // Barra de Filtros Dinâmica
+    function atualizarBotoesFiltrosDinamicos() {
+      const container = document.getElementById("container-filtros");
+      const diasExistentes = new Set();
+      const mesAtualNorm = mesAtual.trim().toLowerCase();
+
+      todasEscalas.forEach(e => {
+        const info = parseDataInfo(e.data);
+        const mesE = (padronizarMesAno(e.mes_ano) || info.mesAno).trim().toLowerCase();
+        if (mesAtual === "TODOS" || mesE === mesAtualNorm) {
+          if (e.dia) diasExistentes.add(e.dia);
         }
       });
+
+      todasMusicas.forEach(m => {
+        const info = parseDataInfo(obterCampo(m, ["data", "date"]));
+        const mesM = info.mesAno.trim().toLowerCase();
+        if (mesAtual === "TODOS" || mesM === mesAtualNorm) {
+          const dia = obterCampo(m, ["dia", "diasemana", "dia_semana"]);
+          if (dia) diasExistentes.add(dia);
+        }
+      });
+
+      let html = `
+        <button onclick="filtrarDia('PROXIMO')" data-filtro="PROXIMO" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold ${diaAtual === 'PROXIMO' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700/50'} shadow-sm whitespace-nowrap transition flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 ${diaAtual === 'PROXIMO' ? 'text-indigo-200' : 'text-slate-400'}"></i>
+          <span id="label-proximo">Próximo Culto</span>
+        </button>
+        <button onclick="filtrarDia('TODOS')" data-filtro="TODOS" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold ${diaAtual === 'TODOS' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700/50'} whitespace-nowrap transition">
+          Todos
+        </button>
+      `;
+
+      Array.from(diasExistentes).forEach(dia => {
+        const ativo = diaAtual.toLowerCase() === dia.toLowerCase();
+        html += `
+          <button onclick="filtrarDia('${dia}')" data-filtro="${dia}" class="filtro-btn px-4 py-1.5 rounded-full text-xs font-semibold ${ativo ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700/50'} whitespace-nowrap transition">
+            ${dia}s
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+      lucide.createIcons();
     }
 
     function filtrarDia(dia) {
       diaAtual = dia;
-      atualizarBotoesFiltro();
+      atualizarBotoesFiltrosDinamicos();
       renderizarCards();
     }
 
@@ -1506,8 +1469,8 @@
         container.innerHTML = `
           <div class="text-center py-16 px-4 bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl">
             <i data-lucide="calendar-x" class="w-8 h-8 text-slate-600 mx-auto mb-2"></i>
-            <p class="text-slate-400 text-sm font-medium">Nenhum culto ou louvor encontrado</p>
-            <p class="text-slate-600 text-xs mt-0.5">Sem cultos para o filtro selecionado.</p>
+            <p class="text-slate-400 text-sm font-medium">Nenhum culto programado</p>
+            <p class="text-slate-600 text-xs mt-0.5">Use o botão 'Criar Escala' para agendar um dia de culto.</p>
           </div>
         `;
         lucide.createIcons();
@@ -1526,7 +1489,7 @@
           cardsHtml = `
             <div class="col-span-full py-8 px-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl text-center">
               <i data-lucide="music" class="w-6 h-6 text-slate-600 mx-auto mb-2"></i>
-              <p class="text-xs text-slate-400 font-medium">Escala definida, aguardando louvores da semana.</p>
+              <p class="text-xs text-slate-400 font-medium">Escala definida, aguardando louvores do culto.</p>
             </div>
           `;
         } else {
