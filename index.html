@@ -29,11 +29,11 @@
 </head>
 <body class="min-h-screen pb-28 selection:bg-indigo-500 selection:text-white relative">
 
-  <!-- Tela de Login (Com logotipo arredondado e três campos de acesso) -->
+  <!-- Ecrã de Login (Logótipo arredondado e três campos de acesso) -->
   <div id="tela-login" class="hidden fixed inset-0 z-50 bg-[#0b1120] flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-sm flex flex-col items-center">
       
-      <!-- Bloco do Logotipo arredondado elegante -->
+      <!-- Bloco do Logótipo com cantos arredondados -->
       <div class="w-64 max-w-full mb-8 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-[#000516]">
         <img 
           src="Scord_texto.png" 
@@ -45,26 +45,26 @@
 
       <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl w-full shadow-2xl">
         <h2 class="text-base font-bold text-white mb-1 text-center">Entrar no Ministério</h2>
-        <p class="text-xs text-slate-400 mb-5 text-center">Informe seus dados fornecidos pela liderança</p>
+        <p class="text-xs text-slate-400 mb-5 text-center">Indique os dados facultados pela liderança</p>
 
         <form id="form-login-membro" onsubmit="autenticarMembro(event)" class="space-y-3.5 text-xs">
           <div>
             <label class="block text-slate-300 font-semibold mb-1">Igreja *</label>
-            <input type="text" id="login-input-igreja" placeholder="Ex: VCD, Lagoinha..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 uppercase font-semibold" />
+            <input type="text" id="login-input-igreja" placeholder="Ex: VCD, IBC..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 uppercase font-semibold" />
           </div>
 
           <div>
             <label class="block text-slate-300 font-semibold mb-1">Nome do Músico *</label>
-            <input type="text" id="login-input-nome" placeholder="Seu nome cadastrado..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500" />
+            <input type="text" id="login-input-nome" placeholder="O seu nome registado..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500" />
           </div>
 
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">Senha de Acesso *</label>
-            <input type="password" id="login-input-senha" placeholder="Digite sua senha..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
+            <label class="block text-slate-300 font-semibold mb-1">Palavra-passe *</label>
+            <input type="password" id="login-input-senha" placeholder="Digite a palavra-passe..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
           </div>
 
           <button type="submit" id="btn-submit-login" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-            <span>Acessar Scord</span>
+            <span>Aceder ao Scord</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
         </form>
@@ -72,37 +72,33 @@
     </div>
   </div>
 
-  <!-- Modal Onboarding: Primeiro Acesso da Liderança (Setup da Igreja) -->
+  <!-- Modal Onboarding: Registo da Igreja -->
   <div id="modal-onboarding-lider" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6">
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-full max-w-sm shadow-2xl">
       <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-3 text-amber-400">
         <i data-lucide="church" class="w-6 h-6"></i>
       </div>
-      <h2 class="text-base font-bold text-white mb-1">Configurar seu Ministério</h2>
+      <h2 class="text-base font-bold text-white mb-1">Configurar Ministério</h2>
       <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-        Bem-vindo à liderança do Scord! Registre os dados da sua igreja para começar.
+        Bem-vindo à liderança do Scord. Registe a sua igreja para ativar a plataforma.
       </p>
 
       <form onsubmit="salvarOnboardingLider(event)" class="space-y-3 text-xs">
         <div>
           <label class="block text-slate-300 font-semibold mb-1">Nome da Igreja *</label>
-          <input type="text" id="onboard-nome-igreja" required placeholder="Ex: Igreja Batista Central" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500" />
+          <input type="text" id="onboard-nome-igreja" required placeholder="Ex: Igreja Batista Vida com Deus" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500" />
         </div>
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Código / Sigla da Igreja * (Usado no Login)</label>
-          <input type="text" id="onboard-codigo-igreja" required placeholder="Ex: VCD, IBC" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500 uppercase font-bold" />
+          <label class="block text-slate-300 font-semibold mb-1">Código / Sigla da Igreja * (Para o Login)</label>
+          <input type="text" id="onboard-codigo-igreja" required placeholder="Ex: VCD" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500 uppercase font-bold" />
         </div>
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Seu Nome (Líder) *</label>
-          <input type="text" id="onboard-nome-lider" required placeholder="Seu nome completo..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500" />
+          <label class="block text-slate-300 font-semibold mb-1">Nome do Líder *</label>
+          <input type="text" id="onboard-nome-lider" required placeholder="O seu nome..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500" />
         </div>
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Seu WhatsApp *</label>
-          <input type="tel" id="onboard-zap-lider" required placeholder="DDD + Número..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500" />
-        </div>
-        <div>
-          <label class="block text-slate-300 font-semibold mb-1">Definir Novo PIN Admin (4 a 6 dígitos) *</label>
-          <input type="password" id="onboard-pin-lider" minlength="4" maxlength="6" required placeholder="PIN de Gestão..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono tracking-widest text-center outline-none focus:border-indigo-500" />
+          <label class="block text-slate-300 font-semibold mb-1">PIN de Gestão (4 a 6 dígitos) *</label>
+          <input type="password" id="onboard-pin-lider" minlength="4" maxlength="6" required placeholder="Ex: 1234" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono tracking-widest text-center outline-none focus:border-indigo-500" />
         </div>
 
         <button type="submit" id="btn-submit-onboard" class="w-full mt-2 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
@@ -113,50 +109,50 @@
     </div>
   </div>
 
-  <!-- Modal Troca Obrigatória de Senha (1º Acesso do Músico) -->
+  <!-- Modal Troca Obrigatória de Palavra-passe (1º Acesso) -->
   <div id="modal-troca-senha-obrigatoria" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6">
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-full max-w-sm shadow-2xl">
       <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3 text-indigo-400">
         <i data-lucide="key-round" class="w-6 h-6"></i>
       </div>
-      <h2 class="text-base font-bold text-white mb-1">Redefinir Senha</h2>
+      <h2 class="text-base font-bold text-white mb-1">Redefinir Palavra-passe</h2>
       <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-        Este é seu primeiro acesso. Defina sua senha pessoal definitiva para continuar.
+        Este é o seu primeiro acesso. Defina uma palavra-passe pessoal definitiva.
       </p>
 
       <form onsubmit="salvarNovaSenhaPrimeiroAcesso(event)" class="space-y-3 text-xs">
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Nova Senha *</label>
+          <label class="block text-slate-300 font-semibold mb-1">Nova Palavra-passe *</label>
           <input type="password" id="primeiro-input-senha-nova" minlength="4" required placeholder="Mínimo 4 caracteres..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
         </div>
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Confirmar Nova Senha *</label>
-          <input type="password" id="primeiro-input-senha-confirma" minlength="4" required placeholder="Repita a nova senha..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
+          <label class="block text-slate-300 font-semibold mb-1">Confirmar Palavra-passe *</label>
+          <input type="password" id="primeiro-input-senha-confirma" minlength="4" required placeholder="Repita a palavra-passe..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
         </div>
 
         <button type="submit" id="btn-submit-troca-senha" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
           <i data-lucide="check" class="w-4 h-4"></i>
-          <span>Salvar e Acessar Repertório</span>
+          <span>Guardar e Aceder</span>
         </button>
       </form>
     </div>
   </div>
 
-  <!-- Tela de Bloqueio por Inadimplência -->
+  <!-- Ecrã de Bloqueio por Subscrição -->
   <div id="bloqueio-assinatura" class="hidden fixed inset-0 z-50 bg-[#0b1120] flex flex-col items-center justify-center p-6 text-center">
     <div class="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
       <i data-lucide="shield-alert" class="w-8 h-8 text-rose-400"></i>
     </div>
     <h2 class="text-xl font-bold text-white mb-2">Acesso Suspenso</h2>
     <p id="msg-bloqueio" class="text-xs text-slate-400 max-w-xs leading-relaxed mb-6">
-      Sua assinatura encontra-se pendente. Entre em contato com a liderança para regularizar o acesso.
+      A subscrição do ministério encontra-se suspensa ou pendente. Contacte o suporte.
     </p>
     <div class="flex flex-col gap-2 w-full max-w-xs">
-      <a href="https://wa.me/5515998165600?text=Ol%C3%A1!%20Gostaria%20de%20regularizar%20o%20meu%20acesso%20ao%20Scord." target="_blank" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg transition text-center">
+      <a href="https://wa.me/5515998165600?text=Ol%C3%A1!%20Gostaria%20de%20regularizar%20o%20acesso%20ao%20Scord." target="_blank" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg transition text-center">
         Falar com o Suporte
       </a>
       <button onclick="deslogarMembro()" class="text-xs text-slate-500 hover:text-slate-300 py-2">
-        Trocar de Usuário
+        Mudar de Conta
       </button>
     </div>
   </div>
@@ -164,7 +160,7 @@
   <!-- Conteúdo Principal do App -->
   <div id="conteudo-app" class="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 sm:px-6 pt-6">
 
-    <!-- Cabeçalho (Com Botão Sair no lugar do loader) -->
+    <!-- Cabeçalho -->
     <header class="flex items-center justify-between pb-4 border-b border-slate-800/80">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-indigo-500/20 flex items-center justify-center overflow-hidden shrink-0 shadow-lg">
@@ -188,8 +184,8 @@
         <button onclick="alternarModoAdmin()" id="btn-lock" title="Acesso da Liderança" class="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
           <i data-lucide="lock" id="icon-lock" class="w-4 h-4 text-slate-400"></i>
         </button>
-        <!-- Botão Sair imediato -->
-        <button onclick="deslogarMembro()" title="Sair da conta" class="w-9 h-9 rounded-xl bg-rose-950/40 border border-rose-500/30 hover:bg-rose-900/40 text-rose-400 active:scale-95 transition flex items-center justify-center">
+        <!-- Botão Terminar Sessão -->
+        <button onclick="deslogarMembro()" title="Terminar sessão" class="w-9 h-9 rounded-xl bg-rose-950/40 border border-rose-500/30 hover:bg-rose-900/40 text-rose-400 active:scale-95 transition flex items-center justify-center">
           <i data-lucide="log-out" class="w-4 h-4"></i>
         </button>
       </div>
@@ -252,8 +248,7 @@
         <div class="flex items-center gap-2">
           <select id="seletor-filtro-musico" onchange="renderizarVisualizacaoEscalaMensal()" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500">
           </select>
-          <!-- Botão WhatsApp compacto sem texto (apenas liderança) -->
-          <button id="btn-zap-consulta-individual" onclick="dispararZapEscalaFiltrada()" title="Enviar escala no WhatsApp deste integrante" class="hidden w-9 h-9 rounded-xl bg-emerald-950/70 border border-emerald-500/40 hover:bg-emerald-900/60 active:scale-95 transition items-center justify-center shrink-0 shadow-lg">
+          <button id="btn-zap-consulta-individual" onclick="dispararZapEscalaFiltrada()" title="Enviar escala no WhatsApp" class="hidden w-9 h-9 rounded-xl bg-emerald-950/70 border border-emerald-500/40 hover:bg-emerald-900/60 active:scale-95 transition items-center justify-center shrink-0 shadow-lg">
             <img src="whatsapp.png" alt="WhatsApp" class="w-4 h-4 object-contain" />
           </button>
         </div>
@@ -263,16 +258,16 @@
     </div>
   </div>
 
-  <!-- Modal 2: Criar Escala Livre por Data -->
+  <!-- Modal 2: Criar Escala Livre por Data (Com Dupla Função) -->
   <div id="modal-escalar-culto" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div>
           <h3 class="text-base font-bold text-white flex items-center gap-2">
             <i data-lucide="calendar-plus" class="w-4 h-4 text-amber-400"></i>
             Criar Escala de Culto
           </h3>
-          <p class="text-[11px] text-slate-400">Selecione a data para programar o culto</p>
+          <p class="text-[11px] text-slate-400">Marque os músicos e as respetivas funções</p>
         </div>
         <button onclick="fecharModalEscalarCulto()" class="text-slate-400 hover:text-white p-1">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -293,7 +288,7 @@
 
         <div class="pt-2 border-t border-slate-800">
           <div class="flex items-center justify-between mb-2">
-            <label class="block text-slate-300 font-semibold">Integrantes e Funções deste Culto:</label>
+            <label class="block text-slate-300 font-semibold">Integrantes e Funções:</label>
             <button type="button" onclick="marcarTodosMembrosEscala(false)" class="text-[10px] text-slate-400 hover:text-rose-400">Limpar seleções</button>
           </div>
           <div id="container-membros-escala-culto" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
@@ -302,21 +297,21 @@
         <div class="flex items-center gap-2 mt-4 pt-2 border-t border-slate-800">
           <button type="submit" id="btn-submit-escala-culto" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5">
             <i data-lucide="check" class="w-4 h-4"></i>
-            Salvar Culto na Programação
+            Guardar Culto na Programação
           </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal 3: Editar Equipe do Culto -->
+  <!-- Modal 3: Editar Equipa do Culto (Com Dupla Função) -->
   <div id="modal-editar-equipe-dia" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div>
           <h3 class="text-base font-bold text-white flex items-center gap-2">
             <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
-            Editar Equipe
+            Editar Equipa
           </h3>
           <p id="label-equipe-dia-edicao" class="text-xs text-indigo-400 font-medium"></p>
         </div>
@@ -330,13 +325,13 @@
         <div id="lista-membros-equipe-dia" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
         <button onclick="salvarAlteracaoEquipeDia()" id="btn-salvar-equipe-dia" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg">
           <i data-lucide="check" class="w-4 h-4"></i>
-          Atualizar Equipe
+          Atualizar Equipa
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal 4: Novo Louvor (Fechamento do botão 'X' corrigido) -->
+  <!-- Modal 4: Novo Louvor -->
   <div id="modal-louvor" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -382,7 +377,7 @@
 
         <div>
           <label class="block text-slate-300 font-semibold mb-1">Observações (Opcional)</label>
-          <input type="text" id="input-obs" placeholder="Ex: Medley com 'Ele Reina', Capotraste 2ª casa..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-indigo-500" />
+          <input type="text" id="input-obs" placeholder="Ex: Medley, Capotraste 2ª casa..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-indigo-500" />
         </div>
 
         <div class="space-y-2 pt-1 border-t border-slate-800">
@@ -406,7 +401,7 @@
 
         <button type="submit" id="btn-submit-louvor" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
           <i data-lucide="save" class="w-4 h-4"></i>
-          Salvar no Repertório
+          Guardar no Repertório
         </button>
       </form>
     </div>
@@ -500,13 +495,13 @@
     </div>
   </div>
 
-  <!-- Modal 7: Gerenciar Membros (Com Gerador de Senha e Disparo WhatsApp de Acesso) -->
+  <!-- Modal 7: Gerir Membros (Sem exigência de telefone) -->
   <div id="modal-membros" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <h3 class="text-base font-bold text-white flex items-center gap-2">
           <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
-          Músicos Cadastrados
+          Músicos Registados
         </h3>
         <button onclick="fecharModalMembros()" class="text-slate-400 hover:text-white p-1">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -523,12 +518,12 @@
         />
         <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1 shrink-0">
           <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-          Cadastrar
+          Adicionar
         </button>
       </form>
 
       <div class="mt-4 pt-3 border-t border-slate-800">
-        <span class="text-xs font-semibold text-slate-400 block mb-2">Equipe e Envio de Acessos:</span>
+        <span class="text-xs font-semibold text-slate-400 block mb-2">Equipa e Envio de Acessos:</span>
         <div id="lista-membros-cadastrados" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
       </div>
     </div>
@@ -548,10 +543,9 @@
       </div>
 
       <div class="mt-4 space-y-4 text-xs">
-        <!-- Alterar PIN Admin -->
         <div class="bg-slate-800/60 border border-slate-700/50 p-3.5 rounded-2xl">
           <span class="text-slate-200 font-bold block mb-1">Segurança da Liderança</span>
-          <p class="text-[11px] text-slate-400 mb-3">Altere seu PIN numérico de acesso à gestão.</p>
+          <p class="text-[11px] text-slate-400 mb-3">Altere o PIN numérico de acesso à gestão.</p>
           <div class="space-y-2">
             <input type="password" id="input-pin-novo" maxlength="8" placeholder="Novo PIN Admin (mín. 4 dígitos)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500 font-mono tracking-widest text-center" />
             <button onclick="salvarNovoPinAdmin()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5">
@@ -561,20 +555,19 @@
           </div>
         </div>
 
-        <!-- Transferência de Liderança -->
         <div class="bg-slate-800/60 border border-amber-500/20 p-3.5 rounded-2xl">
           <span class="text-amber-300 font-bold block mb-1 flex items-center gap-1.5">
             <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
             Transferir Liderança
           </span>
           <p class="text-[11px] text-slate-400 mb-3 leading-relaxed">
-            Passe a gestão da igreja para outro músico. Seu aparelho voltará a ser membro comum.
+            Transfira a gestão da igreja para outro músico.
           </p>
           <div class="space-y-2">
             <select id="select-novo-lider" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-amber-500">
               <option value="">Selecione o novo líder...</option>
             </select>
-            <input type="password" id="input-pin-transicao" maxlength="6" placeholder="Definir PIN provisório para o novo líder..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-amber-500 font-mono text-center tracking-widest" />
+            <input type="password" id="input-pin-transicao" maxlength="6" placeholder="Definir PIN provisório..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-amber-500 font-mono text-center tracking-widest" />
             <button onclick="confirmarTransferenciaLideranca()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5">
               <i data-lucide="send" class="w-3.5 h-3.5"></i>
               Confirmar e Enviar Acesso
@@ -582,14 +575,13 @@
           </div>
         </div>
 
-        <!-- Sessão do Usuário -->
         <div class="bg-slate-800/60 border border-slate-700/50 p-3.5 rounded-2xl flex items-center justify-between">
           <div>
             <span class="text-slate-200 font-bold block">Sessão Atual</span>
             <span id="label-sessao-usuario" class="text-[11px] text-slate-400"></span>
           </div>
           <button onclick="deslogarMembro()" class="bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 px-3 py-1.5 rounded-xl font-bold transition text-xs">
-            Sair
+            Terminar
           </button>
         </div>
       </div>
@@ -597,21 +589,22 @@
   </div>
 
   <script>
-    // Instância Supabase
+    // Inicialização do Supabase
     const SUPABASE_URL = "https://rpqcochkumiwqhsvaxbn.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_zes3bxMmZ2T5OCb_6Ep2dA_JlBn8t-I";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const CACHE_KEY = "scord_app_cache_v5";
+    const CACHE_KEY = "scord_app_cache_v7";
     const AUTH_KEY = "scord_membro_logado";
 
     let CONFIG_IGREJA = {
+      id: null,
       nome: "VCD",
       codigo: "VCD",
       lider_nome: "Liderança",
-      lider_zap: "",
       pin_admin: "1234",
-      onboarding_concluido: false
+      status_assinatura: "ativa",
+      configurada: false
     };
 
     let todasMusicas = [];
@@ -735,30 +728,33 @@
     }
 
     // ==========================================
-    // CONFIGURAÇÕES E ONBOARDING
+    // CONFIGURAÇÕES E LEITURA DA TABELA IGREJAS
     // ==========================================
     async function carregarConfiguracoesGerais() {
       try {
-        const { data } = await db.from("configuracoes").select("*");
-        if (!data) return;
+        const { data: dadosIgreja, error } = await db
+          .from("igrejas")
+          .select("*")
+          .limit(1)
+          .maybeSingle();
 
-        data.forEach(item => {
-          if (item.chave === "igreja_nome") CONFIG_IGREJA.nome = item.valor;
-          if (item.chave === "igreja_codigo") CONFIG_IGREJA.codigo = item.valor;
-          if (item.chave === "lider_nome") CONFIG_IGREJA.lider_nome = item.valor;
-          if (item.chave === "lider_zap") CONFIG_IGREJA.lider_zap = item.valor;
-          if (item.chave === "pin_admin") CONFIG_IGREJA.pin_admin = item.valor;
-          if (item.chave === "onboarding_concluido") CONFIG_IGREJA.onboarding_concluido = (item.valor === "true");
+        if (!error && dadosIgreja) {
+          CONFIG_IGREJA = {
+            id: dadosIgreja.id,
+            nome: dadosIgreja.nome || "VCD",
+            codigo: dadosIgreja.codigo || "VCD",
+            lider_nome: dadosIgreja.lider_nome || "Liderança",
+            pin_admin: dadosIgreja.pin_admin || "1234",
+            status_assinatura: dadosIgreja.status_assinatura || "ativa",
+            configurada: true
+          };
 
-          if (item.chave === "status_assinatura") {
-            const status = (item.valor || "").toLowerCase().trim();
-            if (status === "inativa" || status === "bloqueada" || status === "inadimplente") {
-              bloquearAcessoInadimplente("A assinatura deste ministério encontra-se pendente. Regularize junto ao suporte.");
-            }
+          if (dadosIgreja.status_assinatura === "inativa" || dadosIgreja.status_assinatura === "bloqueada") {
+            bloquearAcessoInadimplente("Acesso do ministério temporariamente suspenso. Contacte o suporte.");
           }
-        });
+        }
       } catch (err) {
-        console.warn("Aviso na leitura de configurações:", err);
+        console.warn("Aviso na leitura de igrejas:", err);
       }
     }
 
@@ -771,34 +767,24 @@
       const nomeIgreja = document.getElementById("onboard-nome-igreja").value.trim();
       const codigoIgreja = document.getElementById("onboard-codigo-igreja").value.trim().toUpperCase();
       const nomeLider = document.getElementById("onboard-nome-lider").value.trim();
-      const zapLider = document.getElementById("onboard-zap-lider").value.trim();
       const pinLider = document.getElementById("onboard-pin-lider").value.trim();
 
-      const inserts = [
-        { chave: "igreja_nome", valor: nomeIgreja },
-        { chave: "igreja_codigo", valor: codigoIgreja },
-        { chave: "lider_nome", valor: nomeLider },
-        { chave: "lider_zap", valor: zapLider },
-        { chave: "pin_admin", valor: pinLider },
-        { chave: "onboarding_concluido", valor: "true" }
-      ];
-
       try {
-        for (const item of inserts) {
-          const { data: ext } = await db.from("configuracoes").select("id").eq("chave", item.chave).maybeSingle();
-          if (ext && ext.id) {
-            await db.from("configuracoes").update({ valor: item.valor }).eq("id", ext.id);
-          } else {
-            await db.from("configuracoes").insert([item]);
-          }
-        }
+        const { error } = await db.from("igrejas").insert([{
+          codigo: codigoIgreja,
+          nome: nomeIgreja,
+          lider_nome: nomeLider,
+          pin_admin: pinLider,
+          status_assinatura: "ativa"
+        }]);
+
+        if (error) throw error;
 
         CONFIG_IGREJA.nome = nomeIgreja;
         CONFIG_IGREJA.codigo = codigoIgreja;
         CONFIG_IGREJA.lider_nome = nomeLider;
-        CONFIG_IGREJA.lider_zap = zapLider;
         CONFIG_IGREJA.pin_admin = pinLider;
-        CONFIG_IGREJA.onboarding_concluido = true;
+        CONFIG_IGREJA.configurada = true;
 
         isAdmin = true;
         localStorage.setItem("scord_admin_ativo", "true");
@@ -809,7 +795,7 @@
         alert(`Ministério ${nomeIgreja} ativado com sucesso!`);
       } catch (err) {
         console.error(err);
-        alert("Erro ao configurar igreja.");
+        alert("Erro ao registar igreja: " + err.message);
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Ativar Ministério</span>`;
@@ -818,7 +804,7 @@
     }
 
     // ==========================================
-    // LOGIN COM 3 CAMPOS E PRIMEIRO ACESSO
+    // AUTENTICAÇÃO E SESSÃO
     // ==========================================
     async function verificarSessaoInicial() {
       const sessaoSalva = localStorage.getItem(AUTH_KEY);
@@ -833,7 +819,7 @@
 
           if (!error && membroAtual) {
             if (membroAtual.ativo === false) {
-              bloquearAcessoInadimplente(`Olá, ${membroAtual.nome}. Seu acesso ao Scord encontra-se suspenso.`);
+              bloquearAcessoInadimplente(`Olá, ${membroAtual.nome}. O seu acesso ao Scord encontra-se suspenso.`);
               return;
             }
             membroLogado = membroAtual;
@@ -882,9 +868,9 @@
           .ilike("nome", `%${nomeInput}%`);
 
         if (error || !membros || membros.length === 0) {
-          alert("Músico não encontrado. Verifique seu nome ou procure a liderança.");
+          alert("Músico não encontrado. Verifique o seu nome ou contacte a liderança.");
           btn.disabled = false;
-          btn.innerHTML = `<span>Acessar Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+          btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
           lucide.createIcons();
           return;
         }
@@ -892,7 +878,7 @@
         const membro = membros[0];
 
         if (membro.ativo === false) {
-          bloquearAcessoInadimplente(`Olá, ${membro.nome}. Seu acesso ao Scord encontra-se suspenso.`);
+          bloquearAcessoInadimplente(`Olá, ${membro.nome}. O seu acesso ao Scord encontra-se suspenso.`);
           return;
         }
 
@@ -900,9 +886,9 @@
         const senhaBate = (senhaInput === senhaEsperada) || (senhaInput === "1234") || (senhaInput === CONFIG_IGREJA.pin_admin);
 
         if (!senhaBate) {
-          alert("Senha incorreta. Verifique a senha recebida no WhatsApp.");
+          alert("Palavra-passe incorreta. Verifique a palavra-passe recebida no WhatsApp.");
           btn.disabled = false;
-          btn.innerHTML = `<span>Acessar Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+          btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
           lucide.createIcons();
           return;
         }
@@ -924,7 +910,7 @@
         alert("Erro ao validar login.");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span>Acessar Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+        btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
         lucide.createIcons();
       }
     }
@@ -935,18 +921,18 @@
       const senhaConfirma = document.getElementById("primeiro-input-senha-confirma").value.trim();
 
       if (senhaNova !== senhaConfirma) {
-        alert("As senhas não coincidem. Digite novamente.");
+        alert("As palavras-passe não coincidem. Digite novamente.");
         return;
       }
 
       if (senhaNova.length < 4) {
-        alert("A nova senha deve ter no mínimo 4 caracteres.");
+        alert("A nova palavra-passe deve ter no mínimo 4 caracteres.");
         return;
       }
 
       const btn = document.getElementById("btn-submit-troca-senha");
       btn.disabled = true;
-      btn.innerHTML = `<span>Salvando nova senha...</span>`;
+      btn.innerHTML = `<span>A guardar palavra-passe...</span>`;
 
       try {
         const { error } = await db
@@ -957,10 +943,7 @@
           })
           .eq("id", membroLogado.id);
 
-        if (error) {
-          alert("Erro ao registrar nova senha: " + error.message);
-          return;
-        }
+        if (error) throw error;
 
         membroLogado.senha = senhaNova;
         membroLogado.primeiro_acesso = false;
@@ -969,13 +952,13 @@
         document.getElementById("modal-troca-senha-obrigatoria").classList.add("hidden");
         aplicarSessaoMembro();
         carregarRepertorio(false);
-        alert("Senha redefinida com sucesso!");
+        alert("Palavra-passe redefinida com sucesso!");
       } catch (err) {
         console.error(err);
-        alert("Erro ao salvar senha.");
+        alert("Erro ao guardar palavra-passe.");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Salvar e Acessar Repertório</span>`;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Guardar e Aceder</span>`;
         lucide.createIcons();
       }
     }
@@ -992,7 +975,7 @@
     }
 
     function deslogarMembro() {
-      if (confirm("Deseja sair da sua conta neste aparelho?")) {
+      if (confirm("Deseja terminar a sessão neste aparelho?")) {
         localStorage.removeItem(AUTH_KEY);
         membroLogado = null;
         isAdmin = false;
@@ -1012,24 +995,24 @@
     }
 
     // ==========================================
-    // DISPARO WHATSAPP DE CREDENCIAIS (LIDERANÇA)
+    // DISPARO WHATSAPP DE CREDENCIAIS
     // ==========================================
     function dispararAcessoWhatsApp(nome, senhaProvisoria) {
       const igrejaAtual = CONFIG_IGREJA.codigo || "VCD";
       let texto = `*Acesso ao Scord - Ministério de Louvor* \n\n`;
-      texto += `Olá, *${nome}*! Segue seu acesso individual ao aplicativo de louvor e escalas:\n\n`;
-      texto += `*Link:* ${window.location.origin}\n`;
-      texto += `*Igreja:* ${igrejaAtual}\n`;
-      texto += `*Nome:* ${nome}\n`;
-      texto += `*Senha Temporária:* ${senhaProvisoria}\n\n`;
-      texto += `_No primeiro acesso, o aplicativo solicitará que você crie sua senha pessoal definitiva._`;
+      texto += `Olá, *${nome}*! Segue o teu acesso individual ao aplicativo de louvor e escalas:\n\n`;
+      texto += `🔗 *Link:* ${window.location.origin}\n`;
+      texto += `⛪ *Igreja:* ${igrejaAtual}\n`;
+      texto += `👤 *Nome:* ${nome}\n`;
+      texto += `🔑 *Palavra-passe Temporária:* ${senhaProvisoria}\n\n`;
+      texto += `_No primeiro acesso, a aplicação solicitará a criação da tua palavra-passe definitiva._`;
 
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, "_blank");
     }
 
     // ==========================================
-    // CONFIGURAÇÕES E TRANSFERÊNCIA DE LIDERANÇA
+    // DEFINIÇÕES E LIDERANÇA
     // ==========================================
     function abrirModalConfiguracoes() {
       const selectLider = document.getElementById("select-novo-lider");
@@ -1053,19 +1036,13 @@
         return;
       }
 
-      const { data: existente } = await db.from("configuracoes").select("id").eq("chave", "pin_admin").maybeSingle();
+      const { error } = await db
+        .from("igrejas")
+        .update({ pin_admin: novoPin })
+        .eq("codigo", CONFIG_IGREJA.codigo || "VCD");
 
-      let err = null;
-      if (existente && existente.id) {
-        const res = await db.from("configuracoes").update({ valor: novoPin }).eq("id", existente.id);
-        err = res.error;
-      } else {
-        const res = await db.from("configuracoes").insert([{ chave: "pin_admin", valor: novoPin }]);
-        err = res.error;
-      }
-
-      if (err) {
-        alert("Erro ao gravar novo PIN: " + err.message);
+      if (error) {
+        alert("Erro ao gravar novo PIN: " + error.message);
       } else {
         CONFIG_IGREJA.pin_admin = novoPin;
         alert("PIN de liderança atualizado com sucesso!");
@@ -1086,36 +1063,31 @@
         return;
       }
 
-      if (!confirm(`Tem certeza que deseja transferir a gestão do Scord para ${novoLiderNome}? Seu aparelho deixará de ser Administrador.`)) {
+      if (!confirm(`Tem a certeza de que deseja transferir a gestão do Scord para ${novoLiderNome}? Este aparelho deixará de ser Administrador.`)) {
         return;
       }
 
       try {
-        await db.from("configuracoes").upsert([
-          { chave: "lider_nome", valor: novoLiderNome },
-          { chave: "pin_admin", valor: novoPin }
-        ], { onConflict: "chave" });
+        const { error } = await db
+          .from("igrejas")
+          .update({
+            lider_nome: novoLiderNome,
+            pin_admin: novoPin
+          })
+          .eq("codigo", CONFIG_IGREJA.codigo || "VCD");
+
+        if (error) throw error;
 
         CONFIG_IGREJA.lider_nome = novoLiderNome;
         CONFIG_IGREJA.pin_admin = novoPin;
 
-        const membroNovoLider = dadosCompletosMembros.find(m => m.nome === novoLiderNome);
-        const zap = membroNovoLider ? (membroNovoLider.telefone || "") : "";
-
         let texto = `*Transição de Liderança - Scord* \n\n`;
-        texto += `Paz, *${novoLiderNome}*! A liderança do ministério de louvor da *${CONFIG_IGREJA.nome}* no aplicativo Scord foi transferida para você.\n\n`;
+        texto += `Paz, *${novoLiderNome}*! A liderança do ministério de louvor da *${CONFIG_IGREJA.nome}* no aplicativo Scord foi transferida para si.\n\n`;
         texto += `🔑 *PIN Provisório de Gestão:* ${novoPin}\n`;
         texto += `🔗 *Acesso:* ${window.location.origin}\n\n`;
-        texto += `_Ao acessar o app, toque no cadeado, digite o PIN provisório e redefina seu PIN nas configurações._`;
+        texto += `_Ao aceder à aplicação, toque no cadeado, digite o PIN provisório e redefina o seu PIN nas definições._`;
 
-        const numLimpo = (zap || "").replace(/\D/g, "");
-        let url = "";
-        if (numLimpo.length >= 10) {
-          const ddi = numLimpo.startsWith("55") ? "" : "55";
-          url = `https://api.whatsapp.com/send?phone=${ddi}${numLimpo}&text=${encodeURIComponent(texto)}`;
-        } else {
-          url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
-        }
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
         window.open(url, "_blank");
 
         isAdmin = false;
@@ -1131,7 +1103,6 @@
       }
     }
 
-    // Modo Liderança (Admin)
     function alternarModoAdmin() {
       if (isAdmin) {
         if (confirm("Deseja sair do modo de liderança?")) {
@@ -1142,7 +1113,7 @@
           renderizarVisualizacaoEscalaMensal();
         }
       } else {
-        if (!CONFIG_IGREJA.onboarding_concluido) {
+        if (!CONFIG_IGREJA.configurada) {
           document.getElementById("modal-onboarding-lider").classList.remove("hidden");
           lucide.createIcons();
           return;
@@ -1180,7 +1151,7 @@
     }
 
     // ==========================================
-    // DISPAROS WHATSAPP (Apenas Liderança)
+    // DISPAROS WHATSAPP (Liderança)
     // ==========================================
     function enviarLembreteCultoWhatsApp(dataCulto, diaSemana) {
       if (!isAdmin) {
@@ -1255,13 +1226,13 @@
       escalasDoMembro.sort((a, b) => a.ordem - b.ordem);
 
       let texto = `*Paz, ${nomeMembro}!* \n\n`;
-      texto += `Segue sua escala de louvor para *${mesAtual}*:\n\n`;
+      texto += `Segue a tua escala de louvor para *${mesAtual}*:\n\n`;
 
       escalasDoMembro.forEach(item => {
         texto += `*${item.data} (${item.dia})* - ${item.funcao}\n`;
       });
 
-      texto += `\nConsulte cifras e repertório completo no aplicativo Scord:\n${window.location.origin}`;
+      texto += `\nConsulte cifras e repertório completo na aplicação Scord:\n${window.location.origin}`;
 
       const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
@@ -1274,7 +1245,7 @@
       }
     }
 
-    // Consulta Escala do Mês
+    // Consulta de Escala Mensal
     function abrirModalConsultaEscala() {
       const seletor = document.getElementById("seletor-filtro-musico");
 
@@ -1288,7 +1259,7 @@
       });
 
       const lista = Array.from(membrosUnicos).sort();
-      seletor.innerHTML = `<option value="TODOS">Equipe Completa (Todos os Cultos)</option>` + 
+      seletor.innerHTML = `<option value="TODOS">Equipa Completa (Todos os Cultos)</option>` + 
         lista.map(m => `<option value="${m}">${m}</option>`).join("");
 
       if (membroLogado && lista.includes(membroLogado.nome)) {
@@ -1328,7 +1299,7 @@
       });
 
       if (escalasFiltradas.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">Nenhuma escala cadastrada para este mês.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 py-3 text-center">Nenhuma escala registada para este mês.</p>`;
         return;
       }
 
@@ -1366,11 +1337,11 @@
     }
 
     // ==========================================
-    // ESCALA LIVRE POR DATA (CALENDÁRIO SUSPENSO)
+    // ESCALA COM DUPLA FUNÇÃO
     // ==========================================
     function abrirModalEscalarCulto() {
       if (todosMembros.length === 0) {
-        alert("Cadastre integrantes no botão 'Músicos' primeiro.");
+        alert("Registe integrantes no botão 'Músicos' primeiro.");
         return;
       }
 
@@ -1408,30 +1379,13 @@
 
       container.innerHTML = todosMembros.map((nome, idx) => {
         const estaMarcado = integrantesStr.toLowerCase().includes(nome.toLowerCase());
-        
-        let f1 = "Voz";
-        let f2 = "";
-
-        if (estaMarcado) {
-          const match = integrantesStr.match(new RegExp(`${nome}\\s*\\(([^)]+)\\)`, "i"));
-          if (match) {
-            const funcoes = match[1].split("+").map(s => s.trim());
-            f1 = funcoes[0] || "Voz";
-            f2 = funcoes[1] || "";
-          }
-        }
-
         return `
           <div class="flex items-center gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/40">
             <input type="checkbox" id="check-culto-membro-${idx}" value="${nome}" ${estaMarcado ? "checked" : ""} class="check-membro-culto-data w-4 h-4 rounded accent-amber-500 shrink-0 cursor-pointer" />
             <label for="check-culto-membro-${idx}" class="text-xs text-slate-100 font-semibold flex-1 cursor-pointer truncate">${nome}</label>
-            
-            <!-- Função Primária -->
             <select id="funcao1-culto-membro-${idx}" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-amber-300 font-semibold outline-none">
               ${optsFuncoes1}
             </select>
-            
-            <!-- Segunda Função Opcional -->
             <select id="funcao2-culto-membro-${idx}" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-400 outline-none">
               ${optsFuncoes2}
             </select>
@@ -1439,7 +1393,6 @@
         `;
       }).join("");
 
-      // Aplica as seleções salvas
       todosMembros.forEach((nome, idx) => {
         const s1 = document.getElementById(`funcao1-culto-membro-${idx}`);
         const s2 = document.getElementById(`funcao2-culto-membro-${idx}`);
@@ -1462,7 +1415,7 @@
       e.preventDefault();
       const btn = document.getElementById("btn-submit-escala-culto");
       btn.disabled = true;
-      btn.innerText = "Salvando culto...";
+      btn.innerText = "A guardar culto...";
 
       const dataIso = document.getElementById("escala-input-data").value;
       const [ano, mes, dia] = dataIso.split("-");
@@ -1495,7 +1448,8 @@
             .update({
               dia: diaSemana,
               mes_ano: mesAno,
-              integrantes: equipeTexto
+              integrantes: equipeTexto,
+              igreja: CONFIG_IGREJA.codigo || "VCD"
             })
             .eq("id", existente.id);
         } else {
@@ -1505,7 +1459,8 @@
               data: dataFmt,
               dia: diaSemana,
               mes_ano: mesAno,
-              integrantes: equipeTexto
+              integrantes: equipeTexto,
+              igreja: CONFIG_IGREJA.codigo || "VCD"
             }]);
         }
 
@@ -1516,18 +1471,17 @@
 
         fecharModalEscalarCulto();
         await carregarRepertorio(true);
-        alert(`Culto de ${diaSemana} (${dataFmt}) salvo com sucesso!`);
+        alert(`Culto de ${diaSemana} (${dataFmt}) guardado com sucesso!`);
       } catch (err) {
         console.error("Erro ao gravar escala:", err);
         alert("Erro ao gravar escala.");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Salvar Culto na Programação`;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Guardar Culto na Programação`;
         lucide.createIcons();
       }
     }
 
-    // Editar Equipe Pontual do Culto
     function abrirModalEditarEquipeDia(dataTexto, diaSemana) {
       dataEquipeEmEdicao = dataTexto;
       diaSemanaEquipeEmEdicao = diaSemana;
@@ -1541,51 +1495,54 @@
         if (m) integrantesStr = obterCampo(m, ["integrantes", "escala", "equipe"]) || "";
       }
 
+      const optsFuncoes1 = LISTA_FUNCOES_PURAS.map(f => `<option value="${f}">${f}</option>`).join("");
+      const optsFuncoes2 = `<option value="">(Nenhuma)</option>` + LISTA_FUNCOES_PURAS.map(f => `<option value="${f}">+ ${f}</option>`).join("");
+
       const container = document.getElementById("lista-membros-equipe-dia");
       container.innerHTML = todosMembros.map((nome, idx) => {
-        const estaMarcado = integrantesStr.includes(nome);
-        let funcaoSalva = "Voz";
-        if (estaMarcado) {
-          const match = integrantesStr.match(new RegExp(`${nome}\\s*\\(([^)]+)\\)`));
-          if (match) funcaoSalva = match[1];
-        }
-
+        const estaMarcado = integrantesStr.toLowerCase().includes(nome.toLowerCase());
         return `
           <div class="flex items-center gap-2 bg-slate-800/60 p-2 rounded-xl">
             <input type="checkbox" id="check-eq-dia-${idx}" value="${nome}" ${estaMarcado ? "checked" : ""} class="check-membro-equipe-dia w-4 h-4 rounded accent-emerald-500" />
-            <label for="check-eq-dia-${idx}" class="text-xs text-slate-200 font-semibold flex-1 cursor-pointer">${nome}</label>
-            <select id="funcao-eq-dia-${idx}" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 outline-none">
-              <option value="Voz" ${funcaoSalva === "Voz" ? "selected" : ""}>Voz</option>
-              <option value="Ministração" ${funcaoSalva === "Ministração" ? "selected" : ""}>Ministração</option>
-              <option value="Teclado" ${funcaoSalva === "Teclado" ? "selected" : ""}>Teclado</option>
-              <option value="Violão" ${funcaoSalva === "Violão" ? "selected" : ""}>Violão</option>
-              <option value="Guitarra" ${funcaoSalva === "Guitarra" ? "selected" : ""}>Guitarra</option>
-              <option value="Baixo" ${funcaoSalva === "Baixo" ? "selected" : ""}>Baixo</option>
-              <option value="Bateria" ${funcaoSalva === "Bateria" ? "selected" : ""}>Bateria</option>
-              <option value="Projeção" ${funcaoSalva === "Projeção" ? "selected" : ""}>Projeção</option>
+            <label for="check-eq-dia-${idx}" class="text-xs text-slate-200 font-semibold flex-1 cursor-pointer truncate">${nome}</label>
+            <select id="funcao1-eq-dia-${idx}" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 outline-none">
+              ${optsFuncoes1}
+            </select>
+            <select id="funcao2-eq-dia-${idx}" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-400 outline-none">
+              ${optsFuncoes2}
             </select>
           </div>
         `;
       }).join("");
 
+      todosMembros.forEach((nome, idx) => {
+        const s1 = document.getElementById(`funcao1-eq-dia-${idx}`);
+        const s2 = document.getElementById(`funcao2-eq-dia-${idx}`);
+        if (integrantesStr.toLowerCase().includes(nome.toLowerCase())) {
+          const match = integrantesStr.match(new RegExp(`${nome}\\s*\\(([^)]+)\\)`, "i"));
+          if (match) {
+            const funcoes = match[1].split("+").map(s => s.trim());
+            if (s1 && funcoes[0]) s1.value = funcoes[0];
+            if (s2 && funcoes[1]) s2.value = funcoes[1];
+          }
+        }
+      });
       lucide.createIcons();
-    }
-
-    function fecharModalEditarEquipeDia() {
-      document.getElementById("modal-editar-equipe-dia").classList.add("hidden");
     }
 
     async function salvarAlteracaoEquipeDia() {
       const btn = document.getElementById("btn-salvar-equipe-dia");
       btn.disabled = true;
-      btn.innerText = "Atualizando equipe...";
+      btn.innerText = "A atualizar equipa...";
 
       const lista = [];
       document.querySelectorAll(".check-membro-equipe-dia").forEach((chk, idx) => {
         if (chk.checked) {
           const nome = chk.value;
-          const funcao = document.getElementById(`funcao-eq-dia-${idx}`).value;
-          lista.push(`${nome} (${funcao})`);
+          const f1 = document.getElementById(`funcao1-eq-dia-${idx}`).value;
+          const f2 = document.getElementById(`funcao2-eq-dia-${idx}`).value;
+          const funcaoFinal = f2 ? `${f1} + ${f2}` : f1;
+          lista.push(`${nome} (${funcaoFinal})`);
         }
       });
 
@@ -1602,7 +1559,10 @@
         if (existente && existente.id) {
           await db
             .from("escalas")
-            .update({ integrantes: equipeTexto })
+            .update({ 
+              integrantes: equipeTexto,
+              igreja: CONFIG_IGREJA.codigo || "VCD"
+            })
             .eq("id", existente.id);
         } else {
           await db
@@ -1611,7 +1571,8 @@
               data: dataEquipeEmEdicao,
               dia: diaSemanaEquipeEmEdicao,
               mes_ano: info.mesAno,
-              integrantes: equipeTexto
+              integrantes: equipeTexto,
+              igreja: CONFIG_IGREJA.codigo || "VCD"
             }]);
         }
 
@@ -1623,16 +1584,18 @@
         fecharModalEditarEquipeDia();
         await carregarRepertorio(true);
       } catch (err) {
-        console.error("Erro ao atualizar equipe:", err);
-        alert("Erro ao salvar alterações da equipe.");
+        console.error("Erro ao atualizar equipa:", err);
+        alert("Erro ao guardar alterações da equipa.");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Equipe`;
+        btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Equipa`;
         lucide.createIcons();
       }
     }
 
-    // Louvores
+    // ==========================================
+    // LOUVORES
+    // ==========================================
     function abrirModalNovoLouvor() {
       document.getElementById("modal-louvor").classList.remove("hidden");
     }
@@ -1654,7 +1617,7 @@
       e.preventDefault();
       const btn = document.getElementById("btn-submit-louvor");
       btn.disabled = true;
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Gravando louvor...`;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> A gravar louvor...`;
       lucide.createIcons();
 
       const dataCrua = document.getElementById("input-data").value;
@@ -1678,20 +1641,21 @@
         link_cifra: document.getElementById("input-cifra").value.trim(),
         link_letra: document.getElementById("input-letra").value.trim(),
         link_spotify: document.getElementById("input-spotify").value.trim(),
-        integrantes: integrantesCulto
+        integrantes: integrantesCulto,
+        igreja: CONFIG_IGREJA.codigo || "VCD"
       };
 
       const { error } = await db.from("musicas").insert([registro]);
 
       if (error) {
-        alert("Erro ao gravar louvor no Supabase: " + error.message);
+        alert("Erro ao gravar louvor: " + error.message);
       } else {
         fecharModalNovoLouvor();
         await carregarRepertorio(true);
       }
 
       btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Salvar no Repertório`;
+      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Guardar no Repertório`;
       lucide.createIcons();
     }
 
@@ -1703,7 +1667,7 @@
 
       const container = document.getElementById("lista-louvores-culto-edicao");
       if (louvoresDesteCulto.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 py-2">Sem louvores cadastrados para este culto.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-500 py-2">Sem louvores registados para este culto.</p>`;
       } else {
         container.innerHTML = louvoresDesteCulto.map(m => {
           const tit = obterCampo(m, ["titulo", "título", "titulo_final"]) || "Louvor";
@@ -1711,7 +1675,6 @@
           const ord = obterCampo(m, ["ordem", "order"]) ? `#${obterCampo(m, ["ordem", "order"])}` : "";
           const obs = obterCampo(m, ["observacoes", "observacao", "obs", "notas"]) || "";
           const idMusica = m.id;
-
           const objStr = encodeURIComponent(JSON.stringify(m));
 
           return `
@@ -1763,7 +1726,7 @@
       e.preventDefault();
       const btn = document.getElementById("btn-submit-edit-louvor");
       btn.disabled = true;
-      btn.innerText = "Atualizando...";
+      btn.innerText = "A atualizar...";
 
       const id = document.getElementById("edit-id-musica").value;
       const linkYt = document.getElementById("edit-yt").value.trim();
@@ -1783,7 +1746,7 @@
       const { error } = await db.from("musicas").update(updates).eq("id", id);
 
       if (error) {
-        alert("Erro ao atualizar no Supabase: " + error.message);
+        alert("Erro ao atualizar: " + error.message);
       } else {
         fecharModalEditarLouvorItem();
         fecharModalEditarCulto();
@@ -1807,7 +1770,9 @@
       }
     }
 
-    // Gestão de Membros
+    // ==========================================
+    // GESTÃO DE MEMBROS
+    // ==========================================
     async function abrirModalMembros() {
       document.getElementById("modal-membros").classList.remove("hidden");
       await atualizarListaMembrosAdmin();
@@ -1820,28 +1785,31 @@
     async function atualizarListaMembrosAdmin() {
       const container = document.getElementById("lista-membros-cadastrados");
       try {
-        const { data: membros } = await db.from("membros").select("*").order("nome", { ascending: true });
+        const { data: membros } = await db
+          .from("membros")
+          .select("*")
+          .order("nome", { ascending: true });
+
         dadosCompletosMembros = membros || [];
         todosMembros = dadosCompletosMembros.map(m => m.nome);
 
         if (dadosCompletosMembros.length === 0) {
-          container.innerHTML = `<p class="text-xs text-slate-500 py-2">Nenhum membro cadastrado.</p>`;
+          container.innerHTML = `<p class="text-xs text-slate-500 py-2">Nenhum membro registado.</p>`;
           return;
         }
 
         container.innerHTML = dadosCompletosMembros.map(m => {
           const nome = m.nome;
-          const zap = m.telefone || "";
           const senha = m.senha || "1234";
 
           return `
             <div class="flex items-center justify-between bg-slate-800/80 px-3 py-2 rounded-xl text-xs gap-2">
               <div class="flex-1 min-w-0">
                 <span class="text-slate-200 font-semibold block truncate">${nome}</span>
-                <span class="text-[10px] text-slate-400 font-mono">Senha: ${senha}</span>
+                <span class="text-[10px] text-slate-400 font-mono">Palavra-passe: ${senha}</span>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
-                <button onclick="dispararAcessoWhatsApp('${nome}', '${zap}', '${senha}')" title="Enviar dados de acesso no WhatsApp" class="w-8 h-8 rounded-lg bg-emerald-950/70 border border-emerald-500/40 hover:bg-emerald-900/60 active:scale-95 transition flex items-center justify-center">
+                <button onclick="dispararAcessoWhatsApp('${nome}', '${senha}')" title="Partilhar acesso no WhatsApp" class="w-8 h-8 rounded-lg bg-emerald-950/70 border border-emerald-500/40 hover:bg-emerald-900/60 active:scale-95 transition flex items-center justify-center">
                   <img src="whatsapp.png" alt="WhatsApp" class="w-4 h-4 object-contain" />
                 </button>
                 <button onclick="excluirMembro('${nome}')" title="Remover integrante" class="text-rose-400 hover:text-rose-300 p-1.5">
@@ -1864,7 +1832,7 @@
       if (!nome) return;
 
       if (dadosCompletosMembros.some(m => m.nome.toLowerCase() === nome.toLowerCase())) {
-        alert("Integrante já cadastrado.");
+        alert("Integrante já registado.");
         return;
       }
 
@@ -1879,31 +1847,33 @@
       }]);
 
       if (error) {
-        alert("Erro ao cadastrar membro: " + error.message);
+        alert("Erro ao registar membro: " + error.message);
         return;
       }
 
       inputNome.value = "";
       await atualizarListaMembrosAdmin();
 
-      if (confirm(`Membro cadastrado! Senha temporária: ${senhaGerada}\nDeseja enviar os dados no WhatsApp agora?`)) {
+      if (confirm(`Músico ${nome} registado! Palavra-passe: ${senhaGerada}\nDeseja abrir o WhatsApp para partilhar o acesso?`)) {
         dispararAcessoWhatsApp(nome, senhaGerada);
       }
     }
 
     async function excluirMembro(nome) {
-      if (!confirm(`Remover ${nome} da equipe de louvor?`)) return;
+      if (!confirm(`Remover ${nome} da equipa de louvor?`)) return;
 
       const { error } = await db.from("membros").delete().eq("nome", nome);
       if (error) {
-        alert("Erro ao excluir: " + error.message);
+        alert("Erro ao remover: " + error.message);
         return;
       }
 
       await atualizarListaMembrosAdmin();
     }
 
-    // Determinação do Culto em Destaque
+    // ==========================================
+    // REPERTÓRIO, DATAS E FILTROS
+    // ==========================================
     function determinarCultoDestaque() {
       const datasMap = new Map();
       const hoje = new Date();
@@ -2001,7 +1971,6 @@
       verificarSessaoInicial();
     }
 
-    // Leitura Supabase
     async function carregarRepertorio(forcado = false) {
       try {
         const [respMusicas, respMembros, respEscalas] = await Promise.all([
@@ -2039,7 +2008,6 @@
       }
     }
 
-    // Barra de Filtros Dinâmica
     function atualizarBotoesFiltrosDinamicos() {
       const container = document.getElementById("container-filtros");
       const diasExistentes = new Set();
@@ -2096,7 +2064,6 @@
       const mapaGrupos = {};
       const mesAtualNorm = mesAtual.trim().toLowerCase();
 
-      // 1. Escalas cadastradas
       todasEscalas.forEach(esc => {
         const info = parseDataInfo(esc.data);
         const mesEscala = (padronizarMesAno(esc.mes_ano) || info.mesAno).trim().toLowerCase();
@@ -2117,7 +2084,6 @@
         }
       });
 
-      // 2. Músicas
       const chavesUnicasAdicionadas = new Set();
 
       todasMusicas.forEach(m => {
@@ -2162,7 +2128,7 @@
           <div class="text-center py-16 px-4 bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl">
             <i data-lucide="calendar-x" class="w-8 h-8 text-slate-600 mx-auto mb-2"></i>
             <p class="text-slate-400 text-sm font-medium">Nenhum culto programado</p>
-            <p class="text-slate-600 text-xs mt-0.5">${isAdmin ? "Use o botão 'Escalar' para agendar um culto." : "Aguarde a publicação da liderança."}</p>
+            <p class="text-slate-600 text-xs mt-0.5">${isAdmin ? "Utilize o botão 'Escalar' para agendar um culto." : "Aguarde a publicação da liderança."}</p>
           </div>
         `;
         lucide.createIcons();
@@ -2181,7 +2147,7 @@
           cardsHtml = `
             <div class="col-span-full py-8 px-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl text-center">
               <i data-lucide="music" class="w-6 h-6 text-slate-600 mx-auto mb-2"></i>
-              <p class="text-xs text-slate-400 font-medium">Escala definida, aguardando louvores do culto.</p>
+              <p class="text-xs text-slate-400 font-medium">Escala definida, a aguardar louvores do culto.</p>
             </div>
           `;
         } else {
@@ -2298,7 +2264,7 @@
             ` : ''}
             <button onclick="abrirModalEditarEquipeDia('${grupo.dataTexto}', '${grupo.diaSemana}')" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1 transition active:scale-95">
               <i data-lucide="users" class="w-3.5 h-3.5"></i>
-              Equipe
+              Equipa
             </button>
             <button onclick="enviarLembreteCultoWhatsApp('${grupo.dataTexto}', '${grupo.diaSemana}')" title="Avisar ensaio no grupo do WhatsApp" class="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-500/30 hover:bg-emerald-900/50 active:scale-95 transition flex items-center justify-center shrink-0">
               <img src="whatsapp.png" alt="WhatsApp" class="w-4 h-4 object-contain" />
