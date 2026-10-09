@@ -414,53 +414,29 @@ async function salvarNovaSenhaPrimeiroAcesso(e) {
   e.preventDefault();
   const inputNova = document.getElementById("primeiro-input-senha-nova");
   const inputConfirma = document.getElementById("primeiro-input-senha-confirma");
-
   const senhaNova = inputNova.value.trim();
-  const senhaConfirma = inputConfirma.value.trim();
 
-  if (senhaNova !== senhaConfirma) {
-    alert("As palavras-passe não coincidem. Digite novamente.");
+  if (senhaNova !== inputConfirma.value.trim()) {
+    alert("As palavras-passe não coincidem.");
     return;
   }
 
-  if (senhaNova.length < 4) {
-    alert("A nova palavra-passe deve ter no mínimo 4 caracteres.");
+  const { data, error } = await db.rpc('salvar_nova_senha_primeiro_acesso', {
+    p_membro_id: membroLogado.id,
+    p_senha_nova: senhaNova
+  });
+
+  if (error || !data || !data.sucesso) {
+    alert("Erro: " + ((data && data.erro) || error?.message));
     return;
   }
 
-  const btn = document.getElementById("btn-submit-troca-senha");
-  btn.disabled = true;
-  btn.innerHTML = `<span>A guardar...</span>`;
-
-  try {
-    const { error } = await db
-      .from("membros")
-      .update({
-        senha: senhaNova,
-        primeiro_acesso: false
-      })
-      .eq("id", membroLogado.id);
-
-    if (error) throw error;
-
-    membroLogado.primeiro_acesso = false;
-    localStorage.setItem(AUTH_KEY, JSON.stringify(membroLogado));
-
-    inputNova.value = "";
-    inputConfirma.value = "";
-
-    document.getElementById("modal-troca-senha-obrigatoria").classList.add("hidden");
-    aplicarSessaoMembro();
-    await carregarRepertorio(false);
-    alert("Palavra-passe pessoal definida com sucesso!");
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao guardar palavra-passe.");
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Guardar e Aceder</span>`;
-    if (window.lucide) lucide.createIcons();
-  }
+  membroLogado.primeiro_acesso = false;
+  localStorage.setItem(AUTH_KEY, JSON.stringify(membroLogado));
+  document.getElementById("modal-troca-senha-obrigatoria").classList.add("hidden");
+  aplicarSessaoMembro();
+  await carregarRepertorio(false);
+  alert("Palavra-passe pessoal definida com sucesso!");
 }
 
 function aplicarSessaoMembro() {
@@ -686,20 +662,14 @@ async function salvarNovoPinAdmin() {
   const input = document.getElementById("input-pin-novo");
   const novoPin = input.value.trim();
 
-  if (novoPin.length < 4) {
-    alert("O PIN deve ter pelo menos 4 dígitos.");
-    return;
-  }
+  const { data, error } = await db.rpc('atualizar_pin_admin_seguro', {
+    p_igreja_id: CONFIG_IGREJA.id,
+    p_pin_atual: PIN_LIDER_VALIDADO,
+    p_novo_pin: novoPin
+  });
 
-  const { error } = await db
-    .from("igrejas")
-    .update({ 
-      pin_admin: novoPin
-    })
-    .eq("id", CONFIG_IGREJA.id);
-
-  if (error) {
-    alert("Erro ao gravar novo PIN: " + error.message);
+  if (error || !data || !data.sucesso) {
+    alert("Erro ao gravar PIN: " + ((data && data.erro) || error?.message));
   } else {
     PIN_LIDER_VALIDADO = novoPin;
     sessionStorage.setItem(PIN_SESSION_KEY, novoPin);
@@ -1348,14 +1318,15 @@ async function redefinirAcessoMembro(id, nome) {
   if (!confirm(`Deseja gerar uma nova palavra-passe provisória para ${nome}?`)) return;
 
   const novaSenha = gerarSenhaAleatoria();
-  const { error } = await db
-    .from("membros")
-    .update({ senha: novaSenha, primeiro_acesso: true })
-    .eq("id", id)
-    .eq("igreja_id", CONFIG_IGREJA.id);
+  const { data, error } = await db.rpc('redefinir_senha_membro_seguro', {
+    p_igreja_id: CONFIG_IGREJA.id,
+    p_pin_lider: PIN_LIDER_VALIDADO,
+    p_membro_id: id,
+    p_nova_senha: novaSenha
+  });
 
-  if (error) {
-    alert("Erro ao redefinir credenciais: " + error.message);
+  if (error || !data || !data.sucesso) {
+    alert("Erro ao redefinir credenciais: " + ((data && data.erro) || error?.message));
     return;
   }
 
@@ -1409,14 +1380,14 @@ async function adicionarNovoMembro(e) {
 async function excluirMembro(nome) {
   if (!confirm(`Remover ${nome} da equipa de louvor?`)) return;
 
-  const { error } = await db
-    .from("membros")
-    .delete()
-    .eq("nome", nome)
-    .eq("igreja_id", CONFIG_IGREJA.id);
+  const { data, error } = await db.rpc('excluir_musico_seguro', {
+    p_igreja_id: CONFIG_IGREJA.id,
+    p_pin_lider: PIN_LIDER_VALIDADO,
+    p_nome: nome
+  });
 
-  if (error) {
-    alert("Erro ao remover: " + error.message);
+  if (error || !data || !data.sucesso) {
+    alert("Erro ao remover: " + ((data && data.erro) || error?.message));
     return;
   }
 
