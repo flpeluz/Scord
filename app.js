@@ -919,10 +919,12 @@ async function salvarEscalaCultoData(e) {
   const equipeTexto = lista.join(", ");
 
   try {
+    // Procura existente da MESMA igreja
     const { data: existente } = await db
       .from("escalas")
       .select("id")
       .eq("data", dataFmt)
+      .eq("igreja_id", CONFIG_IGREJA.id)
       .maybeSingle();
 
     if (existente && existente.id) {
@@ -943,14 +945,16 @@ async function salvarEscalaCultoData(e) {
           dia: diaSemana,
           mes_ano: mesAno,
           integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo || "VCD"
+          igreja: CONFIG_IGREJA.codigo || "VCD",
+          igreja_id: CONFIG_IGREJA.id
         }]);
     }
 
     await db
       .from("musicas")
       .update({ integrantes: equipeTexto })
-      .eq("data", dataFmt);
+      .eq("data", dataFmt)
+      .eq("igreja_id", CONFIG_IGREJA.id);
 
     fecharModalEscalarCulto();
     await carregarRepertorio(true);
@@ -1135,7 +1139,8 @@ async function salvarNovoLouvor(e) {
     link_letra: document.getElementById("input-letra").value.trim(),
     link_spotify: document.getElementById("input-spotify").value.trim(),
     integrantes: integrantesCulto,
-    igreja: CONFIG_IGREJA.codigo || "VCD"
+    igreja: CONFIG_IGREJA.codigo || "VCD",
+    igreja_id: CONFIG_IGREJA.id
   };
 
   try {
@@ -1354,7 +1359,7 @@ async function adicionarNovoMembro(e) {
   if (!nome) return;
 
   if (dadosCompletosMembros.some(m => m.nome.toLowerCase() === nome.toLowerCase())) {
-    alert("Integrante já registado.");
+    alert("Integrante já registado nesta igreja.");
     return;
   }
 
@@ -1365,7 +1370,9 @@ async function adicionarNovoMembro(e) {
     senha: senhaGerada,
     primeiro_acesso: true,
     ativo: true,
-    igreja: CONFIG_IGREJA.codigo || "VCD"
+    igreja: CONFIG_IGREJA.codigo || "VCD",
+    igreja_id: CONFIG_IGREJA.id,
+    is_lider: false
   }]);
 
   if (error) {
@@ -1381,6 +1388,54 @@ async function adicionarNovoMembro(e) {
   }
 }
 
+async function atualizarListaMembrosAdmin() {
+  const container = document.getElementById("lista-membros-cadastrados");
+  try {
+    const { data: membros } = await db
+      .from("membros")
+      .select("id, nome, ativo, primeiro_acesso, is_lider, igreja_id")
+      .eq("igreja_id", CONFIG_IGREJA.id)
+      .order("nome", { ascending: true });
+
+    dadosCompletosMembros = membros || [];
+    todosMembros = dadosCompletosMembros.map(m => m.nome);
+
+    if (dadosCompletosMembros.length === 0) {
+      container.innerHTML = `<p class="text-xs text-slate-500 py-2">Nenhum membro registado.</p>`;
+      return;
+    }
+
+    container.innerHTML = dadosCompletosMembros.map(m => {
+      const nomeSanitizado = m.nome.replace(/"/g, '&quot;');
+      const statusBadge = m.primeiro_acesso 
+        ? `<span class="text-[10px] text-amber-400">1º acesso pendente</span>` 
+        : `<span class="text-[10px] text-emerald-400">Ativo</span>`;
+      const liderBadge = m.is_lider ? `<span class="text-[10px] text-indigo-400 font-bold ml-1">• Líder</span>` : '';
+
+      return `
+        <div class="flex items-center justify-between bg-slate-800/80 px-3 py-2 rounded-xl text-xs gap-2">
+          <div class="flex-1 min-w-0">
+            <span class="text-slate-200 font-semibold block truncate">${nomeSanitizado}${liderBadge}</span>
+            ${statusBadge}
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="redefinirAcessoMembro('${m.id}', '${nomeSanitizado}')" title="Gerar nova palavra-passe e enviar" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60 active:scale-95 transition flex items-center gap-1">
+              <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+              <span>Redefinir</span>
+            </button>
+            <button onclick="excluirMembro('${nomeSanitizado}')" title="Remover integrante" class="text-rose-400 hover:text-rose-300 p-1.5">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+    if (window.lucide) lucide.createIcons();
+  } catch (e) {
+    console.error("Erro ao listar membros:", e);
+  }
+}
+
 async function excluirMembro(nome) {
   if (!confirm(`Remover ${nome} da equipa de louvor?`)) return;
 
@@ -1388,7 +1443,7 @@ async function excluirMembro(nome) {
     .from("membros")
     .delete()
     .eq("nome", nome)
-    .eq("igreja", CONFIG_IGREJA.codigo || "VCD");
+    .eq("igreja_id", CONFIG_IGREJA.id);
 
   if (error) {
     alert("Erro ao remover: " + error.message);
@@ -1499,11 +1554,24 @@ function carregarDadosIniciais() {
 }
 
 async function carregarRepertorio(forcado = false) {
+  if (!CONFIG_IGREJA.id) {
+    console.warn("Nenhuma igreja ativa selecionada para carregar repertório.");
+    return;
+  }
+
   try {
     const [respMusicas, respMembros, respEscalas] = await Promise.all([
-      db.from("musicas").select("*").order("ordem", { ascending: true }),
-      db.from("membros").select("*").order("nome", { ascending: true }),
-      db.from("escalas").select("*")
+      db.from("musicas")
+        .select("*")
+        .eq("igreja_id", CONFIG_IGREJA.id)
+        .order("ordem", { ascending: true }),
+      db.from("membros")
+        .select("*")
+        .eq("igreja_id", CONFIG_IGREJA.id)
+        .order("nome", { ascending: true }),
+      db.from("escalas")
+        .select("*")
+        .eq("igreja_id", CONFIG_IGREJA.id)
     ]);
 
     if (respMusicas.error) console.error("Erro músicas:", respMusicas.error);
