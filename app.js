@@ -5,15 +5,15 @@ const SUPABASE_URL = "https://rpqcochkumiwqhsvaxbn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_zes3bxMmZ2T5OCb_6Ep2dA_JlBn8t-I";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const CACHE_KEY = "scord_app_cache_v7";
+const CACHE_KEY = "scord_app_cache_v9";
 const AUTH_KEY = "scord_membro_logado";
+const PIN_SESSION_KEY = "scord_pin_lider_sessao";
 
 let CONFIG_IGREJA = {
   id: null,
-  nome: "VCD",
-  codigo: "VCD",
+  nome: "",
+  codigo: "",
   lider_nome: "Liderança",
-  pin_admin: "1234",
   status_assinatura: "ativa",
   configurada: false
 };
@@ -28,7 +28,16 @@ let dataCultoAlvo = null;
 let dataEquipeEmEdicao = null;
 let diaSemanaEquipeEmEdicao = null;
 let membroLogado = null;
-let isAdmin = localStorage.getItem("scord_admin_ativo") === "true";
+let isAdmin = false;
+let PIN_LIDER_VALIDADO = sessionStorage.getItem(PIN_SESSION_KEY) || null;
+
+// Variáveis do Painel Secreto do Dono
+let toquesLogo = 0;
+let timerToques = null;
+let ultimaChaveGerada = "";
+let ultimoClienteGerado = "";
+let chaveMasterTemporaria = null;
+let MASTER_SECRET_SESSAO = sessionStorage.getItem("scord_master_secret") || null;
 
 const NOMES_MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -144,77 +153,150 @@ function obterCampo(obj, termos) {
 }
 
 // ==========================================
-// CONFIGURAÇÕES DA IGREJA & ONBOARDING
+// PAINEL SECRETO DO DONO (SEMPRE PEDE SENHA)
 // ==========================================
-async function carregarConfiguracoesGerais() {
-  try {
-    const { data: dadosIgreja, error } = await db
-      .from("igrejas")
-      .select("*")
-      .limit(1)
-      .maybeSingle();
 
-    if (!error && dadosIgreja) {
-      CONFIG_IGREJA = {
-        id: dadosIgreja.id,
-        nome: dadosIgreja.nome || "VCD",
-        codigo: dadosIgreja.codigo || "VCD",
-        lider_nome: dadosIgreja.lider_nome || "Liderança",
-        pin_admin: dadosIgreja.pin_admin || "1234",
-        status_assinatura: dadosIgreja.status_assinatura || "ativa",
-        configurada: true
-      };
+function detectarToquesDono() {
+  toquesLogo++;
+  clearTimeout(timerToques);
+  timerToques = setTimeout(() => { toquesLogo = 0; }, 1500);
 
-      if (dadosIgreja.status_assinatura === "inativa" || dadosIgreja.status_assinatura === "bloqueada") {
-        bloquearAcessoInadimplente("Acesso do ministério temporariamente suspenso. Contacte o suporte.");
-      }
-    }
-  } catch (err) {
-    console.warn("Aviso na leitura de igrejas:", err);
+  if (toquesLogo >= 5) {
+    toquesLogo = 0;
+    abrirPainelDono();
   }
 }
 
-async function salvarOnboardingLider(e) {
-  e.preventDefault();
-  const btn = document.getElementById("btn-submit-onboard");
-  btn.disabled = true;
-  btn.innerHTML = `<span>Ativando...</span>`;
+function abrirPainelDono() {
+  const pass = prompt("Acesso Master do Dono do Scord:");
+  if (!pass) return;
 
-  const nomeIgreja = document.getElementById("onboard-nome-igreja").value.trim();
-  const codigoIgreja = document.getElementById("onboard-codigo-igreja").value.trim().toUpperCase();
-  const nomeLider = document.getElementById("onboard-nome-lider").value.trim();
-  const pinLider = document.getElementById("onboard-pin-lider").value.trim();
+  chaveMasterTemporaria = pass.trim();
+
+  // Limpa os campos antes de exibir
+  document.getElementById("dono-input-cliente").value = "";
+  const boxResultado = document.getElementById("box-resultado-chave");
+  if (boxResultado) boxResultado.classList.add("hidden");
+
+  document.getElementById("modal-dono-chaves").classList.remove("hidden");
+  if (window.lucide) lucide.createIcons();
+}
+
+function fecharPainelDono() {
+  document.getElementById("modal-dono-chaves").classList.add("hidden");
+  // Destrói a chave da memória imediatamente ao fechar
+  chaveMasterTemporaria = null;
+  document.getElementById("dono-input-cliente").value = "";
+  const boxResultado = document.getElementById("box-resultado-chave");
+  if (boxResultado) boxResultado.classList.add("hidden");
+}
+
+async function gerarChaveClienteDono(e) {
+  e.preventDefault();
+  const inputCliente = document.getElementById("dono-input-cliente");
+  const clienteNome = inputCliente.value.trim();
+  if (!clienteNome) return;
+
+  if (!chaveMasterTemporaria) {
+    alert("Sessão master expirada. Digite a senha novamente.");
+    fecharPainelDono();
+    return;
+  }
+
+  const btn = document.getElementById("btn-dono-gerar");
+  btn.disabled = true;
+  btn.innerText = "A gerar chave...";
 
   try {
-    const { error } = await db.from("igrejas").insert([{
-      codigo: codigoIgreja,
-      nome: nomeIgreja,
-      lider_nome: nomeLider,
-      pin_admin: pinLider,
-      status_assinatura: "ativa"
-    }]);
+    const { data, error } = await db.rpc('gerar_chave_mestre_app', {
+      p_master_key: chaveMasterTemporaria,
+      p_cliente_nome: clienteNome
+    });
 
-    if (error) throw error;
+    if (error || !data || !data.sucesso) {
+      alert("Erro: " + ((data && data.erro) || error?.message || "Senha master incorreta."));
+      fecharPainelDono();
+      return;
+    }
 
-    CONFIG_IGREJA.nome = nomeIgreja;
-    CONFIG_IGREJA.codigo = codigoIgreja;
-    CONFIG_IGREJA.lider_nome = nomeLider;
-    CONFIG_IGREJA.pin_admin = pinLider;
-    CONFIG_IGREJA.configurada = true;
+    ultimaChaveGerada = data.chave;
+    ultimoClienteGerado = clienteNome;
 
-    isAdmin = true;
-    localStorage.setItem("scord_admin_ativo", "true");
+    document.getElementById("label-chave-gerada").innerText = ultimaChaveGerada;
+    document.getElementById("box-resultado-chave").classList.remove("hidden");
+    inputCliente.value = "";
 
-    document.getElementById("modal-onboarding-lider").classList.add("hidden");
-    atualizarInterfaceAdmin();
-    renderizarCards();
-    alert(`Ministério ${nomeIgreja} ativado com sucesso!`);
+    compartilharUltimaChaveZap();
+
   } catch (err) {
     console.error(err);
-    alert("Erro ao registar igreja: " + err.message);
+    alert("Falha de comunicação.");
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Ativar Ministério</span>`;
+    btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>Gerar Chave e Enviar Zap</span>`;
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function compartilharUltimaChaveZap() {
+  if (!ultimaChaveGerada) return;
+
+  let texto = `*Acesso Oficial - Scord Gestão de Louvor*\n\n`;
+  texto += `Olá, ${ultimoClienteGerado}!\n`;
+  texto += `Aqui está a sua chave exclusiva de ativação para configurar a sua igreja no Scord:\n\n`;
+  texto += `🔑 *Chave de Ativação:* ${ultimaChaveGerada}\n`;
+  texto += `🔗 *Link:* ${window.location.origin}\n\n`;
+  texto += `_Ao abrir o link, clique em "Primeiro acesso? Configurar novo ministério", insira esta chave e defina o código e os acessos da sua equipa._`;
+
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+  window.open(url, "_blank");
+}
+
+// ==========================================
+// CONFIGURAÇÃO INICIAL (SETUP DO MINISTÉRIO)
+// ==========================================
+async function executarSetupInicial(e) {
+  e.preventDefault();
+  const btn = document.getElementById("btn-submit-setup");
+  btn.disabled = true;
+  btn.innerText = "A configurar no banco de dados...";
+
+  const chave = document.getElementById("setup-input-chave").value.trim();
+  const nomeIgreja = document.getElementById("setup-input-nome-igreja").value.trim();
+  const sigla = document.getElementById("setup-input-sigla").value.trim().toUpperCase().replace(/\s+/g, '-');
+  const liderNome = document.getElementById("setup-input-lider-nome").value.trim();
+  const senhaLider = document.getElementById("setup-input-senha").value.trim();
+  const pinLider = document.getElementById("setup-input-pin").value.trim();
+
+  try {
+    const { data, error } = await db.rpc('inicializar_igreja', {
+      p_setup_key: chave,
+      p_nome_igreja: nomeIgreja,
+      p_codigo: sigla,
+      p_lider_nome: liderNome,
+      p_senha_lider: senhaLider,
+      p_pin_lider: pinLider
+    });
+
+    if (error || !data || !data.sucesso) {
+      alert("Falha no cadastro: " + ((data && data.erro) || error?.message));
+      return;
+    }
+
+    alert(`Ministério "${nomeIgreja}" criado com sucesso!\nCódigo da Igreja: ${sigla}\nFaça o login com o seu nome e palavra-passe.`);
+
+    document.getElementById("modal-setup-inicial").classList.add("hidden");
+    document.getElementById("login-input-igreja").value = sigla;
+    document.getElementById("login-input-nome").value = liderNome;
+    document.getElementById("login-input-senha").value = "";
+    document.getElementById("login-input-senha").focus();
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro na conexão com o banco.");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Criar Ministério e Iniciar";
     if (window.lucide) lucide.createIcons();
   }
 }
@@ -227,27 +309,19 @@ async function verificarSessaoInicial() {
   if (sessaoSalva) {
     try {
       membroLogado = JSON.parse(sessaoSalva);
-      const { data: membroAtual, error } = await db
-        .from("membros")
-        .select("*")
-        .eq("id", membroLogado.id)
-        .maybeSingle();
+      CONFIG_IGREJA = {
+        id: membroLogado.igreja_id,
+        codigo: membroLogado.igreja,
+        nome: membroLogado.igreja_nome || membroLogado.igreja,
+        configurada: true
+      };
 
-      if (!error && membroAtual) {
-        if (membroAtual.ativo === false) {
-          bloquearAcessoInadimplente(`Olá, ${membroAtual.nome}. O seu acesso ao Scord encontra-se suspenso.`);
-          return;
-        }
-        membroLogado = membroAtual;
-        localStorage.setItem(AUTH_KEY, JSON.stringify(membroAtual));
-
-        if (membroAtual.primeiro_acesso === true) {
-          document.getElementById("modal-troca-senha-obrigatoria").classList.remove("hidden");
-          return;
-        }
+      if (PIN_LIDER_VALIDADO) {
+        isAdmin = true;
       }
 
       aplicarSessaoMembro();
+      await carregarRepertorio(false);
       return;
     } catch (e) {
       console.error("Erro na leitura da sessão:", e);
@@ -260,34 +334,22 @@ async function verificarSessaoInicial() {
 function exibirTelaLogin() {
   document.getElementById("tela-login").classList.remove("hidden");
   document.getElementById("conteudo-app").classList.add("hidden");
-  
-  // Limpa ativamente os campos de palavra-passe e nome
+
   const inputSenha = document.getElementById("login-input-senha");
   const inputNome = document.getElementById("login-input-nome");
   if (inputSenha) inputSenha.value = "";
   if (inputNome) inputNome.value = "";
 
   const inputIgreja = document.getElementById("login-input-igreja");
-  if (inputIgreja && !inputIgreja.value) {
-    inputIgreja.value = CONFIG_IGREJA.codigo || "VCD";
+  if (inputIgreja && CONFIG_IGREJA.codigo) {
+    inputIgreja.value = CONFIG_IGREJA.codigo;
   }
   if (window.lucide) lucide.createIcons();
 }
 
-// Função geradora de e-mail transparente do Scord
-function gerarEmailSintetico(nome, igrejaCodigo) {
-  const nomeLimpo = String(nome || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "");
-  return `${nomeLimpo}.${String(igrejaCodigo || "").trim().toLowerCase()}@scord.app`;
-}
-
-// 1. LOGIN COM SUPABASE AUTH NATIVO
 async function autenticarMembro(e) {
   e.preventDefault();
-  const igrejaInput = document.getElementById("login-input-igreja").value.trim().toUpperCase();
+  const igrejaInput = document.getElementById("login-input-igreja").value.trim().toUpperCase().replace(/\s+/g, '-');
   const nomeInput = document.getElementById("login-input-nome").value.trim();
   const senhaInput = document.getElementById("login-input-senha").value.trim();
 
@@ -296,68 +358,42 @@ async function autenticarMembro(e) {
   btn.innerHTML = `<span>A verificar credenciais...</span>`;
 
   try {
-    const emailLogin = gerarEmailSintetico(nomeInput, igrejaInput);
-
-    // Login com o Supabase Auth
-    const { data: authData, error: authError } = await db.auth.signInWithPassword({
-      email: emailLogin,
-      password: senhaInput
+    const { data, error } = await db.rpc('login_membro', {
+      p_igreja_codigo: igrejaInput,
+      p_nome: nomeInput,
+      p_senha: senhaInput
     });
 
-    if (authError || !authData.user) {
-      alert("Credenciais inválidas. Verifique a igreja, o nome e a palavra-passe.");
+    if (error || !data || !data.sucesso) {
+      alert((data && data.erro) || "Credenciais inválidas. Verifique os dados inseridos.");
       return;
     }
 
-    // Limpa o campo de senha imediatamente
     document.getElementById("login-input-senha").value = "";
 
-    // Busca o registro do membro vinculado com o user_id autenticado
-    const { data: membro, error: membroError } = await db
-      .from("membros")
-      .select("*, igrejas(*)")
-      .eq("user_id", authData.user.id)
-      .maybeSingle();
+    membroLogado = {
+      id: data.id,
+      nome: data.nome,
+      is_lider: data.is_lider,
+      igreja_id: data.igreja_id,
+      igreja: data.igreja_codigo,
+      igreja_nome: data.igreja_nome,
+      primeiro_acesso: data.primeiro_acesso
+    };
 
-    if (membroError || !membro) {
-      alert("Perfil de membro não configurado no sistema.");
-      await db.auth.signOut();
-      return;
-    }
+    CONFIG_IGREJA = {
+      id: data.igreja_id,
+      codigo: data.igreja_codigo,
+      nome: data.igreja_nome,
+      status_assinatura: data.status_assinatura,
+      configurada: true
+    };
 
-    if (membro.ativo === false) {
-      bloquearAcessoInadimplente(`Olá, ${membro.nome}. O seu acesso ao Scord encontra-se inativo.`);
-      await db.auth.signOut();
-      return;
-    }
+    localStorage.setItem(AUTH_KEY, JSON.stringify(membroLogado));
 
-    membroLogado = membro;
-    isAdmin = membro.is_lider === true;
-    localStorage.setItem(AUTH_KEY, JSON.stringify(membro));
-    localStorage.setItem("scord_admin_ativo", isAdmin ? "true" : "false");
-
-    if (membro.igrejas) {
-      CONFIG_IGREJA = {
-        id: membro.igrejas.id,
-        nome: membro.igrejas.nome,
-        codigo: membro.igrejas.codigo,
-        lider_nome: membro.igrejas.lider_nome,
-        status_assinatura: membro.igrejas.status_assinatura,
-        configurada: true
-      };
-    } else {
-      CONFIG_IGREJA = {
-        id: membro.igreja_id,
-        codigo: membro.igreja,
-        configurada: true
-      };
-    }
-
-    // Se for o primeiro acesso obrigando a troca de senha
-    if (membro.primeiro_acesso === true) {
+    if (data.primeiro_acesso) {
       document.getElementById("tela-login").classList.add("hidden");
       document.getElementById("modal-troca-senha-obrigatoria").classList.remove("hidden");
-      if (window.lucide) lucide.createIcons();
       return;
     }
 
@@ -366,7 +402,7 @@ async function autenticarMembro(e) {
 
   } catch (err) {
     console.error("Erro na autenticação:", err);
-    alert("Falha de comunicação com o servidor.");
+    alert("Falha na comunicação com o banco.");
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
@@ -376,14 +412,12 @@ async function autenticarMembro(e) {
 
 async function salvarNovaSenhaPrimeiroAcesso(e) {
   e.preventDefault();
-  // 1. Lê o que o usuário digitou
   const inputNova = document.getElementById("primeiro-input-senha-nova");
   const inputConfirma = document.getElementById("primeiro-input-senha-confirma");
 
   const senhaNova = inputNova.value.trim();
   const senhaConfirma = inputConfirma.value.trim();
 
-  // 2. Validações
   if (senhaNova !== senhaConfirma) {
     alert("As palavras-passe não coincidem. Digite novamente.");
     return;
@@ -396,7 +430,7 @@ async function salvarNovaSenhaPrimeiroAcesso(e) {
 
   const btn = document.getElementById("btn-submit-troca-senha");
   btn.disabled = true;
-  btn.innerHTML = `<span>A guardar palavra-passe...</span>`;
+  btn.innerHTML = `<span>A guardar...</span>`;
 
   try {
     const { error } = await db
@@ -409,18 +443,16 @@ async function salvarNovaSenhaPrimeiroAcesso(e) {
 
     if (error) throw error;
 
-    membroLogado.senha = senhaNova;
     membroLogado.primeiro_acesso = false;
     localStorage.setItem(AUTH_KEY, JSON.stringify(membroLogado));
 
-    // 3. Limpa os campos da tela APÓS salvar com sucesso
     inputNova.value = "";
     inputConfirma.value = "";
 
     document.getElementById("modal-troca-senha-obrigatoria").classList.add("hidden");
     aplicarSessaoMembro();
-    carregarRepertorio(false);
-    alert("Palavra-passe redefinida com sucesso!");
+    await carregarRepertorio(false);
+    alert("Palavra-passe pessoal definida com sucesso!");
   } catch (err) {
     console.error(err);
     alert("Erro ao guardar palavra-passe.");
@@ -433,31 +465,31 @@ async function salvarNovaSenhaPrimeiroAcesso(e) {
 
 function aplicarSessaoMembro() {
   if (membroLogado) {
-    document.getElementById("identificacao-usuario").innerText = `${membroLogado.nome} • ${CONFIG_IGREJA.codigo || 'VCD'}`;
+    document.getElementById("identificacao-usuario").innerText = `${membroLogado.nome} • ${CONFIG_IGREJA.codigo || 'Scord'}`;
     const lblSessao = document.getElementById("label-sessao-usuario");
-    if (lblSessao) lblSessao.innerText = `${membroLogado.nome} (${CONFIG_IGREJA.codigo || 'VCD'})`;
+    if (lblSessao) lblSessao.innerText = `${membroLogado.nome} (${CONFIG_IGREJA.codigo || 'Scord'})`;
   }
   document.getElementById("tela-login").classList.add("hidden");
   document.getElementById("bloqueio-assinatura").classList.add("hidden");
   document.getElementById("conteudo-app").classList.remove("hidden");
+  atualizarInterfaceAdmin();
 }
 
-// 3. LOGOUT LIMPO
 function deslogarMembro() {
   if (confirm("Deseja terminar a sessão neste aparelho?")) {
-    db.auth.signOut().finally(() => {
-      localStorage.removeItem(AUTH_KEY);
-      localStorage.removeItem("scord_admin_ativo");
-      membroLogado = null;
-      isAdmin = false;
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem("scord_admin_ativo");
+    sessionStorage.removeItem(PIN_SESSION_KEY);
+    membroLogado = null;
+    isAdmin = false;
+    PIN_LIDER_VALIDADO = null;
 
-      const formLogin = document.getElementById("form-login-membro");
-      if (formLogin) formLogin.reset();
+    const formLogin = document.getElementById("form-login-membro");
+    if (formLogin) formLogin.reset();
 
-      document.getElementById("conteudo-app").classList.add("hidden");
-      document.getElementById("bloqueio-assinatura").classList.add("hidden");
-      exibirTelaLogin();
-    });
+    document.getElementById("conteudo-app").classList.add("hidden");
+    document.getElementById("bloqueio-assinatura").classList.add("hidden");
+    exibirTelaLogin();
   }
 }
 
@@ -470,14 +502,74 @@ function bloquearAcessoInadimplente(msg) {
 }
 
 // ==========================================
-// DISPAROS DE WHATSAPP
+// CADEADO & ACESSO DA LIDERANÇA
+// ==========================================
+async function alternarModoAdmin() {
+  if (isAdmin) {
+    if (confirm("Deseja fechar o painel de liderança e voltar ao modo músico?")) {
+      isAdmin = false;
+      PIN_LIDER_VALIDADO = null;
+      sessionStorage.removeItem(PIN_SESSION_KEY);
+      atualizarInterfaceAdmin();
+      renderizarCards();
+      renderizarVisualizacaoEscalaMensal();
+    }
+  } else {
+    const pin = prompt("Área reservada à liderança. Digite o PIN do cadeado:");
+    if (!pin) return;
+
+    try {
+      const { data, error } = await db.rpc('validar_pin_lideranca', {
+        p_igreja_id: CONFIG_IGREJA.id,
+        p_pin: pin.trim()
+      });
+
+      if (error || !data || !data.sucesso) {
+        alert("PIN incorreto.");
+        return;
+      }
+
+      isAdmin = true;
+      PIN_LIDER_VALIDADO = pin.trim();
+      sessionStorage.setItem(PIN_SESSION_KEY, PIN_LIDER_VALIDADO);
+
+      atualizarInterfaceAdmin();
+      renderizarCards();
+      renderizarVisualizacaoEscalaMensal();
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao verificar PIN da liderança.");
+    }
+  }
+}
+
+function atualizarInterfaceAdmin() {
+  const btnLock = document.getElementById("icon-lock");
+  const painelAdmin = document.getElementById("painel-botoes-admin");
+
+  if (isAdmin) {
+    btnLock.setAttribute("data-lucide", "unlock");
+    btnLock.className = "w-4 h-4 text-emerald-400";
+    painelAdmin.classList.remove("hidden");
+    painelAdmin.classList.add("flex");
+  } else {
+    btnLock.setAttribute("data-lucide", "lock");
+    btnLock.className = "w-4 h-4 text-slate-400";
+    painelAdmin.classList.add("hidden");
+    painelAdmin.classList.remove("flex");
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+// ==========================================
+// DISPAROS DE WHATSAPP (COM CÓDIGO DA IGREJA)
 // ==========================================
 function dispararAcessoWhatsApp(nome, senhaProvisoria) {
-  const igrejaAtual = CONFIG_IGREJA.codigo || "VCD";
+  const igrejaCodigo = CONFIG_IGREJA.codigo || "SCORD";
   let texto = `*Acesso ao Scord - Ministério de Louvor* \n\n`;
   texto += `Olá, *${nome}*! Segue o teu acesso individual ao aplicativo de louvor e escalas:\n\n`;
   texto += `🔗 *Link:* ${window.location.origin}\n`;
-  texto += `⛪ *Igreja:* ${igrejaAtual}\n`;
+  texto += `⛪ *Código da Igreja:* ${igrejaCodigo}\n`;
   texto += `👤 *Nome:* ${nome}\n`;
   texto += `🔑 *Palavra-passe Temporária:* ${senhaProvisoria}\n\n`;
   texto += `_No primeiro acesso, a aplicação solicitará a criação da tua palavra-passe definitiva._`;
@@ -582,16 +674,12 @@ function dispararZapEscalaFiltrada() {
 // DEFINIÇÕES E GESTÃO DA LIDERANÇA
 // ==========================================
 function abrirModalConfiguracoes() {
-  const selectLider = document.getElementById("select-novo-lider");
-  selectLider.innerHTML = `<option value="">Selecione o novo líder...</option>` +
-    todosMembros.map(m => `<option value="${m}">${m}</option>`).join("");
   document.getElementById("modal-configuracoes").classList.remove("hidden");
 }
 
 function fecharModalConfiguracoes() {
   document.getElementById("modal-configuracoes").classList.add("hidden");
   document.getElementById("input-pin-novo").value = "";
-  document.getElementById("input-pin-transicao").value = "";
 }
 
 async function salvarNovoPinAdmin() {
@@ -605,116 +693,19 @@ async function salvarNovoPinAdmin() {
 
   const { error } = await db
     .from("igrejas")
-    .update({ pin_admin: novoPin })
-    .eq("codigo", CONFIG_IGREJA.codigo || "VCD");
+    .update({ 
+      pin_admin: novoPin
+    })
+    .eq("id", CONFIG_IGREJA.id);
 
   if (error) {
     alert("Erro ao gravar novo PIN: " + error.message);
   } else {
-    CONFIG_IGREJA.pin_admin = novoPin;
-    alert("PIN de liderança atualizado com sucesso!");
+    PIN_LIDER_VALIDADO = novoPin;
+    sessionStorage.setItem(PIN_SESSION_KEY, novoPin);
+    alert("PIN do cadeado atualizado com sucesso!");
     fecharModalConfiguracoes();
   }
-}
-
-async function confirmarTransferenciaLideranca() {
-  const novoLiderNome = document.getElementById("select-novo-lider").value;
-  const novoPin = document.getElementById("input-pin-transicao").value.trim();
-
-  if (!novoLiderNome) {
-    alert("Selecione o integrante que assumirá a liderança.");
-    return;
-  }
-  if (novoPin.length < 4) {
-    alert("Defina um PIN provisório de pelo menos 4 dígitos para o novo líder.");
-    return;
-  }
-
-  if (!confirm(`Tem a certeza de que deseja transferir a gestão do Scord para ${novoLiderNome}? Este aparelho deixará de ser Administrador.`)) {
-    return;
-  }
-
-  try {
-    const { error } = await db
-      .from("igrejas")
-      .update({
-        lider_nome: novoLiderNome,
-        pin_admin: novoPin
-      })
-      .eq("codigo", CONFIG_IGREJA.codigo || "VCD");
-
-    if (error) throw error;
-
-    CONFIG_IGREJA.lider_nome = novoLiderNome;
-    CONFIG_IGREJA.pin_admin = novoPin;
-
-    let texto = `*Transição de Liderança - Scord* \n\n`;
-    texto += `Paz, *${novoLiderNome}*! A liderança do ministério de louvor da *${CONFIG_IGREJA.nome}* no aplicativo Scord foi transferida para si.\n\n`;
-    texto += `🔑 *PIN Provisório de Gestão:* ${novoPin}\n`;
-    texto += `🔗 *Acesso:* ${window.location.origin}\n\n`;
-    texto += `_Ao aceder à aplicação, toque no cadeado, digite o PIN provisório e redefina o seu PIN nas definições._`;
-
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
-    window.open(url, "_blank");
-
-    isAdmin = false;
-    localStorage.removeItem("scord_admin_ativo");
-    fecharModalConfiguracoes();
-    atualizarInterfaceAdmin();
-    renderizarCards();
-    renderizarVisualizacaoEscalaMensal();
-    alert(`Liderança transferida para ${novoLiderNome} com sucesso!`);
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao transferir liderança.");
-  }
-}
-
-function alternarModoAdmin() {
-  if (isAdmin) {
-    if (confirm("Deseja sair do modo de liderança?")) {
-      isAdmin = false;
-      localStorage.removeItem("scord_admin_ativo");
-      atualizarInterfaceAdmin();
-      renderizarCards();
-      renderizarVisualizacaoEscalaMensal();
-    }
-  } else {
-    if (!CONFIG_IGREJA.configurada) {
-      document.getElementById("modal-onboarding-lider").classList.remove("hidden");
-      if (window.lucide) lucide.createIcons();
-      return;
-    }
-
-    const pin = prompt("Digite o PIN da liderança:");
-    if (pin === CONFIG_IGREJA.pin_admin) {
-      isAdmin = true;
-      localStorage.setItem("scord_admin_ativo", "true");
-      atualizarInterfaceAdmin();
-      renderizarCards();
-      renderizarVisualizacaoEscalaMensal();
-    } else if (pin !== null) {
-      alert("PIN incorreto.");
-    }
-  }
-}
-
-function atualizarInterfaceAdmin() {
-  const btnLock = document.getElementById("icon-lock");
-  const painelAdmin = document.getElementById("painel-botoes-admin");
-
-  if (isAdmin) {
-    btnLock.setAttribute("data-lucide", "unlock");
-    btnLock.className = "w-4 h-4 text-emerald-400";
-    painelAdmin.classList.remove("hidden");
-    painelAdmin.classList.add("flex");
-  } else {
-    btnLock.setAttribute("data-lucide", "lock");
-    btnLock.className = "w-4 h-4 text-slate-400";
-    painelAdmin.classList.add("hidden");
-    painelAdmin.classList.remove("flex");
-  }
-  if (window.lucide) lucide.createIcons();
 }
 
 // ==========================================
@@ -723,7 +714,6 @@ function atualizarInterfaceAdmin() {
 function abrirModalConsultaEscala() {
   const seletor = document.getElementById("seletor-filtro-musico");
 
-  // Garante que a lista de membros esteja disponível
   const membrosUnicos = new Set(todosMembros);
   todasEscalas.forEach(esc => {
     const partes = (esc.integrantes || "").split(",");
@@ -736,7 +726,6 @@ function abrirModalConsultaEscala() {
   const lista = Array.from(membrosUnicos).sort();
 
   if (isAdmin) {
-    // LIDERANÇA: pode escolher qualquer músico ou ver todos os cultos
     seletor.disabled = false;
     seletor.classList.remove("opacity-60", "cursor-not-allowed");
     seletor.innerHTML = `<option value="TODOS">Equipa Completa (Todos os Cultos)</option>` + 
@@ -748,7 +737,6 @@ function abrirModalConsultaEscala() {
       seletor.value = "TODOS";
     }
   } else {
-    // MÚSICO COMUM: trava a consulta exclusivamente no nome da conta dele
     const nomeUsuario = membroLogado ? membroLogado.nome : (lista[0] || "Músico");
     seletor.innerHTML = `<option value="${nomeUsuario}">${nomeUsuario} (Minha Escala)</option>`;
     seletor.value = nomeUsuario;
@@ -772,7 +760,6 @@ function renderizarVisualizacaoEscalaMensal() {
   const btnZap = document.getElementById("btn-zap-consulta-individual");
   const mesAtualNormalizado = (mesAtual || "").trim().toLowerCase();
 
-  // Botão de envio WhatsApp só aparece para a liderança com músico individual selecionado
   if (btnZap) {
     if (isAdmin && filtro !== "TODOS") {
       btnZap.classList.remove("hidden");
@@ -783,7 +770,6 @@ function renderizarVisualizacaoEscalaMensal() {
     }
   }
 
-  // Filtra as escalas correspondentes ao mês corrente
   const escalasFiltradas = todasEscalas.filter(item => {
     const mesEscala = (padronizarMesAno(item.mes_ano) || "").trim().toLowerCase();
     const info = parseDataInfo(item.data);
@@ -796,7 +782,6 @@ function renderizarVisualizacaoEscalaMensal() {
     return;
   }
 
-  // Ordena cronologicamente por dia
   escalasFiltradas.sort((a, b) => parseDataInfo(a.data).chaveOrdenacao - parseDataInfo(b.data).chaveOrdenacao);
 
   let html = "";
@@ -808,7 +793,6 @@ function renderizarVisualizacaoEscalaMensal() {
       let textoExibicao = integrantes;
 
       if (filtro !== "TODOS") {
-        // Realça a função do músico específico se não for a listagem de todos
         const regex = new RegExp(`(${filtro}\\s*\\([^)]+\\))`, "i");
         const match = integrantes.match(regex);
         textoExibicao = match 
@@ -835,9 +819,22 @@ function renderizarVisualizacaoEscalaMensal() {
 }
 
 // ==========================================
-// ESCALAÇÃO DE CULTOS (DUPLA FUNÇÃO)
+// ESCALAÇÃO DE CULTOS
 // ==========================================
-function abrirModalEscalarCulto() {
+async function abrirModalEscalarCulto() {
+  // Se a lista estiver vazia na memória, tenta carregar imediatamente do banco
+  if (todosMembros.length === 0 && CONFIG_IGREJA.id) {
+    const { data: membros } = await db
+      .from("membros")
+      .select("nome")
+      .eq("igreja_id", CONFIG_IGREJA.id)
+      .order("nome", { ascending: true });
+
+    if (membros && membros.length > 0) {
+      todosMembros = membros.map(m => m.nome);
+    }
+  }
+
   if (todosMembros.length === 0) {
     alert("Registe integrantes no botão 'Músicos' primeiro.");
     return;
@@ -934,7 +931,6 @@ async function salvarEscalaCultoData(e) {
   const equipeTexto = lista.join(", ");
 
   try {
-    // Procura existente da MESMA igreja
     const { data: existente } = await db
       .from("escalas")
       .select("id")
@@ -949,7 +945,7 @@ async function salvarEscalaCultoData(e) {
           dia: diaSemana,
           mes_ano: mesAno,
           integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo || "VCD"
+          igreja: CONFIG_IGREJA.codigo
         })
         .eq("id", existente.id);
     } else {
@@ -960,7 +956,7 @@ async function salvarEscalaCultoData(e) {
           dia: diaSemana,
           mes_ano: mesAno,
           integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo || "VCD",
+          igreja: CONFIG_IGREJA.codigo,
           igreja_id: CONFIG_IGREJA.id
         }]);
     }
@@ -985,7 +981,7 @@ async function salvarEscalaCultoData(e) {
 }
 
 // ==========================================
-// EDIÇÃO PONTUAL DE EQUIPE (DUPLA FUNÇÃO)
+// EDIÇÃO PONTUAL DE EQUIPE
 // ==========================================
 function abrirModalEditarEquipeDia(dataTexto, diaSemana) {
   dataEquipeEmEdicao = dataTexto;
@@ -1036,10 +1032,7 @@ function abrirModalEditarEquipeDia(dataTexto, diaSemana) {
 }
 
 function fecharModalEditarEquipeDia() {
-  const modal = document.getElementById("modal-editar-equipe-dia");
-  if (modal) {
-    modal.classList.add("hidden");
-  }
+  document.getElementById("modal-editar-equipe-dia")?.classList.add("hidden");
 }
 
 async function salvarAlteracaoEquipeDia() {
@@ -1066,6 +1059,7 @@ async function salvarAlteracaoEquipeDia() {
       .from("escalas")
       .select("id")
       .eq("data", dataEquipeEmEdicao)
+      .eq("igreja_id", CONFIG_IGREJA.id)
       .maybeSingle();
 
     if (existente && existente.id) {
@@ -1073,7 +1067,7 @@ async function salvarAlteracaoEquipeDia() {
         .from("escalas")
         .update({
           integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo || "VCD"
+          igreja: CONFIG_IGREJA.codigo
         })
         .eq("id", existente.id);
     } else {
@@ -1084,14 +1078,16 @@ async function salvarAlteracaoEquipeDia() {
           dia: diaSemanaEquipeEmEdicao,
           mes_ano: info.mesAno,
           integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo || "VCD"
+          igreja: CONFIG_IGREJA.codigo,
+          igreja_id: CONFIG_IGREJA.id
         }]);
     }
 
     await db
       .from("musicas")
       .update({ integrantes: equipeTexto })
-      .eq("data", dataEquipeEmEdicao);
+      .eq("data", dataEquipeEmEdicao)
+      .eq("igreja_id", CONFIG_IGREJA.id);
 
     fecharModalEditarEquipeDia();
     await carregarRepertorio(true);
@@ -1154,7 +1150,7 @@ async function salvarNovoLouvor(e) {
     link_letra: document.getElementById("input-letra").value.trim(),
     link_spotify: document.getElementById("input-spotify").value.trim(),
     integrantes: integrantesCulto,
-    igreja: CONFIG_IGREJA.codigo || "VCD",
+    igreja: CONFIG_IGREJA.codigo,
     igreja_id: CONFIG_IGREJA.id
   };
 
@@ -1305,114 +1301,6 @@ async function atualizarListaMembrosAdmin() {
   try {
     const { data: membros } = await db
       .from("membros")
-      .select("id, nome, ativo, primeiro_acesso, igreja")
-      .eq("igreja", CONFIG_IGREJA.codigo || "VCD")
-      .order("nome", { ascending: true });
-
-    dadosCompletosMembros = membros || [];
-    todosMembros = dadosCompletosMembros.map(m => m.nome);
-
-    if (dadosCompletosMembros.length === 0) {
-      container.innerHTML = `<p class="text-xs text-slate-500 py-2">Nenhum membro registado.</p>`;
-      return;
-    }
-
-    container.innerHTML = dadosCompletosMembros.map(m => {
-      const nomeSanitizado = m.nome.replace(/"/g, '&quot;');
-      const statusBadge = m.primeiro_acesso 
-        ? `<span class="text-[10px] text-amber-400">1º acesso pendente</span>` 
-        : `<span class="text-[10px] text-emerald-400">Ativo</span>`;
-
-      return `
-        <div class="flex items-center justify-between bg-slate-800/80 px-3 py-2 rounded-xl text-xs gap-2">
-          <div class="flex-1 min-w-0">
-            <span class="text-slate-200 font-semibold block truncate">${nomeSanitizado}</span>
-            ${statusBadge}
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="redefinirAcessoMembro('${m.id}', '${nomeSanitizado}')" title="Gerar nova palavra-passe e enviar" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60 active:scale-95 transition flex items-center gap-1">
-              <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
-              <span>Redefinir</span>
-            </button>
-            <button onclick="excluirMembro('${nomeSanitizado}')" title="Remover integrante" class="text-rose-400 hover:text-rose-300 p-1.5">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    }).join("");
-    if (window.lucide) lucide.createIcons();
-  } catch (e) {
-    console.error("Erro ao listar membros:", e);
-  }
-}
-
-// Nova função auxiliar para reset de credencial pontual
-async function redefinirAcessoMembro(id, nome) {
-  if (!confirm(`Deseja gerar uma nova palavra-passe provisória para ${nome}?`)) return;
-
-  const novaSenha = gerarSenhaAleatoria();
-  const { error } = await db
-    .from("membros")
-    .update({ senha: novaSenha, primeiro_acesso: true })
-    .eq("id", id)
-    .eq("igreja", CONFIG_IGREJA.codigo || "VCD");
-
-  if (error) {
-    alert("Erro ao redefinir credenciais: " + error.message);
-    return;
-  }
-
-  dispararAcessoWhatsApp(nome, novaSenha);
-  await atualizarListaMembrosAdmin();
-}
-
-// 2. CADASTRO DE MÚSICO PELA EDGE FUNCTION (Sem deslogar o líder)
-async function adicionarNovoMembro(e) {
-  e.preventDefault();
-  const inputNome = document.getElementById("input-novo-membro-nome");
-  const nome = inputNome.value.trim();
-  if (!nome) return;
-
-  const btn = document.querySelector("#form-novo-membro button[type='submit']");
-  if (btn) btn.disabled = true;
-
-  const senhaGerada = gerarSenhaAleatoria();
-
-  try {
-    const { data, error } = await db.functions.invoke('criar-membro', {
-      body: {
-        nome: nome,
-        igreja_codigo: CONFIG_IGREJA.codigo || 'VCD',
-        senha_provisoria: senhaGerada,
-        is_lider: false
-      }
-    });
-
-    if (error || (data && data.error)) {
-      alert("Erro ao registar membro: " + (error?.message || data?.error));
-      return;
-    }
-
-    inputNome.value = "";
-    await atualizarListaMembrosAdmin();
-
-    if (confirm(`Músico ${nome} registado com sucesso!\nPalavra-passe provisória: ${senhaGerada}\n\nDeseja abrir o WhatsApp para partilhar o acesso?`)) {
-      dispararAcessoWhatsApp(nome, senhaGerada);
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao invocar criação de membro.");
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-async function atualizarListaMembrosAdmin() {
-  const container = document.getElementById("lista-membros-cadastrados");
-  try {
-    const { data: membros } = await db
-      .from("membros")
       .select("id, nome, ativo, primeiro_acesso, is_lider, igreja_id")
       .eq("igreja_id", CONFIG_IGREJA.id)
       .order("nome", { ascending: true });
@@ -1453,6 +1341,68 @@ async function atualizarListaMembrosAdmin() {
     if (window.lucide) lucide.createIcons();
   } catch (e) {
     console.error("Erro ao listar membros:", e);
+  }
+}
+
+async function redefinirAcessoMembro(id, nome) {
+  if (!confirm(`Deseja gerar uma nova palavra-passe provisória para ${nome}?`)) return;
+
+  const novaSenha = gerarSenhaAleatoria();
+  const { error } = await db
+    .from("membros")
+    .update({ senha: novaSenha, primeiro_acesso: true })
+    .eq("id", id)
+    .eq("igreja_id", CONFIG_IGREJA.id);
+
+  if (error) {
+    alert("Erro ao redefinir credenciais: " + error.message);
+    return;
+  }
+
+  dispararAcessoWhatsApp(nome, novaSenha);
+  await atualizarListaMembrosAdmin();
+}
+
+async function adicionarNovoMembro(e) {
+  e.preventDefault();
+  const inputNome = document.getElementById("input-novo-membro-nome");
+  const nome = inputNome.value.trim();
+  if (!nome) return;
+
+  if (!PIN_LIDER_VALIDADO) {
+    alert("Sessão da liderança expirada. Toque no cadeado e digite o PIN novamente.");
+    return;
+  }
+
+  const btn = document.querySelector("#modal-membros button[type='submit']");
+  if (btn) btn.disabled = true;
+
+  const senhaGerada = gerarSenhaAleatoria();
+
+  try {
+    const { data, error } = await db.rpc('cadastrar_musico_seguro', {
+      p_igreja_id: CONFIG_IGREJA.id,
+      p_pin_lider: PIN_LIDER_VALIDADO,
+      p_nome: nome,
+      p_senha_provisoria: senhaGerada
+    });
+
+    if (error || !data || !data.sucesso) {
+      alert("Erro ao registar integrante: " + ((data && data.erro) || error?.message));
+      return;
+    }
+
+    inputNome.value = "";
+    await atualizarListaMembrosAdmin();
+
+    if (confirm(`Músico ${nome} registado com sucesso!\nPalavra-passe: ${senhaGerada}\n\nDeseja enviar os dados de acesso por WhatsApp?`)) {
+      dispararAcessoWhatsApp(nome, senhaGerada);
+    }
+  } catch (err) {
+    console.error("Erro ao invocar cadastro:", err);
+    alert("Erro ao registar integrante.");
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -1569,15 +1519,11 @@ function carregarDadosIniciais() {
       console.error("Erro ao ler cache local:", e);
     }
   }
-  carregarConfiguracoesGerais();
   verificarSessaoInicial();
 }
 
 async function carregarRepertorio(forcado = false) {
-  if (!CONFIG_IGREJA.id) {
-    console.warn("Nenhuma igreja ativa selecionada para carregar repertório.");
-    return;
-  }
+  if (!CONFIG_IGREJA.id) return;
 
   try {
     const [respMusicas, respMembros, respEscalas] = await Promise.all([
@@ -1645,7 +1591,6 @@ function atualizarBotoesFiltrosDinamicos() {
     }
   });
   
-  // Ordem cronológica da semana
   const ordemSemanal = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 
   const diasOrdenados = Array.from(diasExistentes).sort((a, b) => {

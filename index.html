@@ -17,16 +17,17 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- Estilos Customizados Externos -->
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="min-h-screen pb-28 selection:bg-indigo-500 selection:text-white relative">
+<body class="min-h-screen pb-28 selection:bg-indigo-500 selection:text-white relative bg-[#0b1120] text-slate-100">
 
   <!-- Ecrã de Login -->
   <div id="tela-login" class="hidden fixed inset-0 z-50 bg-[#0b1120] flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-sm flex flex-col items-center">
-      <div class="w-64 max-w-full mb-8 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-[#000516]">
-        <img src="assets/Scord_texto.png" alt="Scord" class="w-full h-auto object-contain block mx-auto" onerror="this.src='assets/Scord.png'" />
+      
+      <!-- LOGO COM TOQUE MÚLTIPLO SECRETO (5 TOQUES ABREM O PAINEL MASTER) -->
+      <div class="w-64 max-w-full mb-8 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-[#000516] cursor-pointer select-none" onclick="detectarToquesDono()">
+        <img src="assets/Scord_texto.png" alt="Scord" class="w-full h-auto object-contain block mx-auto pointer-events-none" onerror="this.src='assets/Scord.png'" />
       </div>
 
       <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl w-full shadow-2xl">
@@ -35,65 +36,130 @@
 
         <form id="form-login-membro" onsubmit="autenticarMembro(event)" autocomplete="off" class="space-y-3.5 text-xs">
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">Igreja *</label>
-            <input type="text" id="login-input-igreja" placeholder="Ex: VCD-ITAPEVA, 2-IEQ, NIC-SEDE..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 uppercase font-semibold" />
+            <label class="block text-slate-300 font-semibold mb-1">Código da Igreja *</label>
+            <input type="text" id="login-input-igreja" placeholder="Ex: VCD-ITAPEVA, 2-IEQ..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 uppercase font-semibold" />
           </div>
 
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">Nome do Músico *</label>
-            <input type="text" id="login-input-nome" placeholder="O seu nome registado..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500" />
+            <label class="block text-slate-300 font-semibold mb-1">Nome *</label>
+            <input type="text" id="login-input-nome" placeholder="O seu nome..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500" />
           </div>
 
           <div>
             <label class="block text-slate-300 font-semibold mb-1">Palavra-passe *</label>
-            <input type="password" id="login-input-senha" autocomplete="new-password" placeholder="Digite a senha..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
+            <input type="password" id="login-input-senha" autocomplete="new-password" placeholder="Digite a palavra-passe..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
           </div>
 
           <button type="submit" id="btn-submit-login" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
             <span>Aceder ao Scord</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
+          
+          <div class="mt-4 text-center">
+            <button type="button" onclick="document.getElementById('modal-setup-inicial').classList.remove('hidden')" class="text-xs text-slate-400 hover:text-indigo-400 underline transition">
+              Primeiro acesso? Configurar novo ministério
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Modal Onboarding -->
-  <div id="modal-onboarding-lider" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6">
-    <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-full max-w-sm shadow-2xl">
-      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-3 text-amber-400">
-        <i data-lucide="church" class="w-6 h-6"></i>
+  <!-- MODAL DE PRIMEIRO ACESSO / CADASTRO DE MINISTÉRIO -->
+  <div id="modal-setup-inicial" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl text-left relative">
+      <button type="button" onclick="document.getElementById('modal-setup-inicial').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="inline-flex p-3 rounded-2xl bg-indigo-500/10 text-indigo-400 mb-3">
+          <i data-lucide="sparkles" class="w-7 h-7"></i>
+        </div>
+        <h2 class="text-xl font-bold text-white">Configurar Novo Ministério</h2>
+        <p class="text-xs text-slate-400 mt-1">Insira os dados da sua congregação para iniciar o Scord.</p>
       </div>
-      <h2 class="text-base font-bold text-white mb-1">Configurar Ministério</h2>
-      <p class="text-xs text-slate-400 mb-4 leading-relaxed">Bem-vindo à liderança do Scord. Registe a sua igreja para ativar a plataforma.</p>
 
-      <form onsubmit="salvarOnboardingLider(event)" class="space-y-3 text-xs">
+      <form id="form-setup-igreja" onsubmit="executarSetupInicial(event)" class="space-y-4 text-xs">
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Nome da Igreja *</label>
-          <input type="text" id="onboard-nome-igreja" required placeholder="Ex: Igreja Batista Vida com Deus" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500" />
-        </div>
-        <div>
-          <label class="block text-slate-300 font-semibold mb-1">Código / Sigla da Igreja * (Para o Login)</label>
-          <input type="text" id="onboard-codigo-igreja" required placeholder="Ex: VCD" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500 uppercase font-bold" />
-        </div>
-        <div>
-          <label class="block text-slate-300 font-semibold mb-1">Nome do Líder *</label>
-          <input type="text" id="onboard-nome-lider" required placeholder="O seu nome..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500" />
-        </div>
-        <div>
-          <label class="block text-slate-300 font-semibold mb-1">PIN de Gestão (4 a 6 dígitos) *</label>
-          <input type="password" id="onboard-pin-lider" minlength="4" maxlength="6" required placeholder="Ex: 1234" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 font-mono tracking-widest text-center outline-none focus:border-indigo-500" />
+          <label class="block text-slate-400 font-semibold mb-1">Chave de Ativação do Ministério *</label>
+          <input type="password" id="setup-input-chave" required placeholder="Insira a chave fornecida pelo suporte" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono">
+          <span class="text-[10px] text-slate-500">Chave comercial de ativação da plataforma.</span>
         </div>
 
-        <button type="submit" id="btn-submit-onboard" class="w-full mt-2 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-          <i data-lucide="check" class="w-4 h-4"></i>
-          <span>Ativar Ministério</span>
-        </button>
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Nome da Igreja *</label>
+          <input type="text" id="setup-input-nome-igreja" required placeholder="Ex: Igreja Batista Vida com Deus" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Código da Igreja (Livre) *</label>
+          <input type="text" id="setup-input-sigla" required placeholder="Ex: VCD-ITAPEVA ou IBVD-SEDE" class="w-full uppercase bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-bold">
+          <span class="text-[10px] text-slate-500">Este será o código que os seus músicos usarão para entrar.</span>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 font-semibold mb-1">Seu Nome (Líder / Músico) *</label>
+          <input type="text" id="setup-input-lider-nome" required placeholder="Ex: Felipe" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">Sua Palavra-passe *</label>
+            <input type="password" id="setup-input-senha" required placeholder="Para fazer login" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 font-semibold mb-1">PIN do Cadeado *</label>
+            <input type="password" id="setup-input-pin" required placeholder="Para gerenciar" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono text-center">
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" id="btn-submit-setup" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Criar Ministério e Iniciar</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal Troca de Senha -->
+  <!-- MODAL SECRETO DO DONO / GERADOR DE CHAVES -->
+  <div id="modal-dono-chaves" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-indigo-500/30 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative text-xs">
+      <button type="button" onclick="fecharPainelDono()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-2 mb-4 text-indigo-400 font-bold text-sm">
+        <i data-lucide="shield-check" class="w-5 h-5"></i>
+        <span>Painel Master - Scord</span>
+      </div>
+
+      <form onsubmit="gerarChaveClienteDono(event)" class="space-y-3">
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Nome do Cliente / Igreja</label>
+          <input type="text" id="dono-input-cliente" required placeholder="Ex: Pr. André - Batista Central" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-indigo-500">
+        </div>
+
+        <button type="submit" id="btn-dono-gerar" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Gerar Chave e Enviar Zap</span>
+        </button>
+      </form>
+
+      <div id="box-resultado-chave" class="mt-4 p-3 bg-slate-950/80 border border-slate-800 rounded-xl hidden">
+        <span class="text-[10px] text-slate-400 uppercase font-semibold block">Última chave gerada:</span>
+        <span id="label-chave-gerada" class="text-sm font-mono font-bold text-emerald-400 block my-1"></span>
+        <button type="button" onclick="compartilharUltimaChaveZap()" class="w-full bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-semibold py-1.5 rounded-lg transition flex items-center justify-center gap-1 text-[11px]">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <span>Reenviar no WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Troca de Senha Obrigatória -->
   <div id="modal-troca-senha-obrigatoria" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-6">
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl w-full max-w-sm shadow-2xl">
       <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3 text-indigo-400">
@@ -126,9 +192,8 @@
       <i data-lucide="shield-alert" class="w-8 h-8 text-rose-400"></i>
     </div>
     <h2 class="text-xl font-bold text-white mb-2">Acesso Suspenso</h2>
-    <p id="msg-bloqueio" class="text-xs text-slate-400 max-w-xs leading-relaxed mb-6">A subscrição do ministério encontra-se suspensa ou pendente. Contacte o suporte.</p>
+    <p id="msg-bloqueio" class="text-xs text-slate-400 max-w-xs leading-relaxed mb-6">A subscrição do ministério encontra-se suspensa ou pendente.</p>
     <div class="flex flex-col gap-2 w-full max-w-xs">
-      <a href="https://wa.me/5515998165600?text=Ol%C3%A1!%20Gostaria%20de%20regularizar%20o%20acesso%20ao%20Scord." target="_blank" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg transition text-center">Falar com o Suporte</a>
       <button onclick="deslogarMembro()" class="text-xs text-slate-500 hover:text-slate-300 py-2">Mudar de Conta</button>
     </div>
   </div>
@@ -187,7 +252,7 @@
   </div>
 
   <!-- Modais -->
-  <!-- Modal 1: Consultar Escala -->
+  <!-- Modal: Consultar Escala -->
   <div id="modal-consulta-escala" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -210,7 +275,7 @@
     </div>
   </div>
 
-  <!-- Modal 2: Escalar Culto -->
+  <!-- Modal: Escalar Culto -->
   <div id="modal-escalar-culto" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -247,7 +312,7 @@
     </div>
   </div>
 
-  <!-- Modal 3: Editar Equipe -->
+  <!-- Modal: Editar Equipe -->
   <div id="modal-editar-equipe-dia" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -267,7 +332,7 @@
     </div>
   </div>
 
-  <!-- Modal 4: Novo Louvor -->
+  <!-- Modal: Novo Louvor -->
   <div id="modal-louvor" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -316,7 +381,7 @@
     </div>
   </div>
 
-  <!-- Modal 5: Gestão de Louvores do Culto -->
+  <!-- Modal: Gestão de Louvores do Culto -->
   <div id="modal-editar-culto" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -333,7 +398,7 @@
     </div>
   </div>
 
-  <!-- Modal 6: Editar Louvor Item -->
+  <!-- Modal: Editar Louvor Item -->
   <div id="modal-editar-louvor-item" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -357,7 +422,7 @@
     </div>
   </div>
 
-  <!-- Modal 7: Membros -->
+  <!-- Modal: Membros -->
   <div id="modal-membros" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -375,7 +440,7 @@
     </div>
   </div>
 
-  <!-- Modal 8: Configurações -->
+  <!-- Modal: Configurações -->
   <div id="modal-configuracoes" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -385,19 +450,10 @@
       <div class="mt-4 space-y-4 text-xs">
         <div class="bg-slate-800/60 border border-slate-700/50 p-3.5 rounded-2xl">
           <span class="text-slate-200 font-bold block mb-1">Segurança da Liderança</span>
-          <p class="text-[11px] text-slate-400 mb-3">Altere o PIN numérico de acesso à gestão.</p>
+          <p class="text-[11px] text-slate-400 mb-3">Altere o PIN numérico do cadeado.</p>
           <div class="space-y-2">
             <input type="password" id="input-pin-novo" maxlength="8" placeholder="Novo PIN Admin (mín. 4 dígitos)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-indigo-500 font-mono tracking-widest text-center" />
             <button onclick="salvarNovoPinAdmin()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5"><i data-lucide="key" class="w-3.5 h-3.5"></i> Atualizar PIN</button>
-          </div>
-        </div>
-        <div class="bg-slate-800/60 border border-amber-500/20 p-3.5 rounded-2xl">
-          <span class="text-amber-300 font-bold block mb-1 flex items-center gap-1.5"><i data-lucide="user-check" class="w-3.5 h-3.5"></i> Transferir Liderança</span>
-          <p class="text-[11px] text-slate-400 mb-3 leading-relaxed">Transfira a gestão da igreja para outro músico.</p>
-          <div class="space-y-2">
-            <select id="select-novo-lider" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-amber-500"><option value="">Selecione o novo líder...</option></select>
-            <input type="password" id="input-pin-transicao" maxlength="6" placeholder="Definir PIN provisório..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 outline-none focus:border-amber-500 font-mono text-center tracking-widest" />
-            <button onclick="confirmarTransferenciaLideranca()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Confirmar e Enviar Acesso</button>
           </div>
         </div>
         <div class="bg-slate-800/60 border border-slate-700/50 p-3.5 rounded-2xl flex items-center justify-between">
@@ -408,7 +464,6 @@
     </div>
   </div>
 
-  <!-- Scripts no fim do arquivo -->
   <script src="app.js" defer></script>
 </body>
 </html>
