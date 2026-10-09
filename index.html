@@ -33,10 +33,10 @@
         <h2 class="text-base font-bold text-white mb-1 text-center">Entrar no Ministério</h2>
         <p class="text-xs text-slate-400 mb-5 text-center">Indique os dados facultados pela liderança</p>
 
-        <form id="form-login-membro" onsubmit="autenticarMembro(event)" class="space-y-3.5 text-xs">
+        <form id="form-login-membro" onsubmit="autenticarMembro(event)" autocomplete="off" class="space-y-3.5 text-xs">
           <div>
             <label class="block text-slate-300 font-semibold mb-1">Igreja *</label>
-            <input type="text" id="login-input-igreja" placeholder="Ex: VCD, IBC..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 uppercase font-semibold" />
+            <input type="text" id="login-input-igreja" placeholder="Ex: VCD-ITAPEVA, 2-IEQ, NIC-SEDE..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 uppercase font-semibold" />
           </div>
 
           <div>
@@ -46,7 +46,7 @@
 
           <div>
             <label class="block text-slate-300 font-semibold mb-1">Palavra-passe *</label>
-            <input type="password" id="login-input-senha" placeholder="Digite a palavra-passe..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
+            <input type="password" id="login-input-senha" autocomplete="new-password" placeholder="Digite a senha..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
           </div>
 
           <button type="submit" id="btn-submit-login" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">

@@ -260,6 +260,13 @@ async function verificarSessaoInicial() {
 function exibirTelaLogin() {
   document.getElementById("tela-login").classList.remove("hidden");
   document.getElementById("conteudo-app").classList.add("hidden");
+  
+  // Limpa ativamente os campos de palavra-passe e nome
+  const inputSenha = document.getElementById("login-input-senha");
+  const inputNome = document.getElementById("login-input-nome");
+  if (inputSenha) inputSenha.value = "";
+  if (inputNome) inputNome.value = "";
+
   const inputIgreja = document.getElementById("login-input-igreja");
   if (inputIgreja && !inputIgreja.value) {
     inputIgreja.value = CONFIG_IGREJA.codigo || "VCD";
@@ -334,6 +341,8 @@ async function autenticarMembro(e) {
     membroLogado = membro;
     localStorage.setItem(AUTH_KEY, JSON.stringify(membro));
 
+    document.getElementById("login-input-senha").value = "";
+
     if (membro.primeiro_acesso === true) {
       document.getElementById("tela-login").classList.add("hidden");
       document.getElementById("modal-troca-senha-obrigatoria").classList.remove("hidden");
@@ -355,9 +364,14 @@ async function autenticarMembro(e) {
 
 async function salvarNovaSenhaPrimeiroAcesso(e) {
   e.preventDefault();
-  const senhaNova = document.getElementById("primeiro-input-senha-nova").value.trim();
-  const senhaConfirma = document.getElementById("primeiro-input-senha-confirma").value.trim();
+  // 1. Lê o que o usuário digitou
+  const inputNova = document.getElementById("primeiro-input-senha-nova");
+  const inputConfirma = document.getElementById("primeiro-input-senha-confirma");
 
+  const senhaNova = inputNova.value.trim();
+  const senhaConfirma = inputConfirma.value.trim();
+
+  // 2. Validações
   if (senhaNova !== senhaConfirma) {
     alert("As palavras-passe não coincidem. Digite novamente.");
     return;
@@ -387,6 +401,10 @@ async function salvarNovaSenhaPrimeiroAcesso(e) {
     membroLogado.primeiro_acesso = false;
     localStorage.setItem(AUTH_KEY, JSON.stringify(membroLogado));
 
+    // 3. Limpa os campos da tela APÓS salvar com sucesso
+    inputNova.value = "";
+    inputConfirma.value = "";
+
     document.getElementById("modal-troca-senha-obrigatoria").classList.add("hidden");
     aplicarSessaoMembro();
     carregarRepertorio(false);
@@ -413,11 +431,15 @@ function aplicarSessaoMembro() {
 }
 
 function deslogarMembro() {
-  if (confirm("Deseja terminar a sessão neste aparelho?")) {
+  if (confirm("Deseja terminar a sessão neste dispositivo?")) {
     localStorage.removeItem(AUTH_KEY);
     membroLogado = null;
     isAdmin = false;
     localStorage.removeItem("scord_admin_ativo");
+
+    const formLogin = document.getElementById("form-login-membro");
+    if (formLogin) formLogin.reset();
+
     document.getElementById("conteudo-app").classList.add("hidden");
     document.getElementById("bloqueio-assinatura").classList.add("hidden");
     exibirTelaLogin();
