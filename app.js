@@ -274,6 +274,17 @@ function exibirTelaLogin() {
   if (window.lucide) lucide.createIcons();
 }
 
+// Função geradora de e-mail transparente do Scord
+function gerarEmailSintetico(nome, igrejaCodigo) {
+  const nomeLimpo = String(nome || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+  return `${nomeLimpo}.${String(igrejaCodigo || "").trim().toLowerCase()}@scord.app`;
+}
+
+// 1. LOGIN COM SUPABASE AUTH NATIVO
 async function autenticarMembro(e) {
   e.preventDefault();
   const igrejaInput = document.getElementById("login-input-igreja").value.trim().toUpperCase();
@@ -282,67 +293,67 @@ async function autenticarMembro(e) {
 
   const btn = document.getElementById("btn-submit-login");
   btn.disabled = true;
-  btn.innerHTML = `<span>A validar...</span>`;
+  btn.innerHTML = `<span>A verificar credenciais...</span>`;
 
   try {
-    // 1. Valida se a igreja informada existe e está ativa
-    const { data: igrejaData, error: errIgreja } = await db
-      .from("igrejas")
-      .select("*")
-      .eq("codigo", igrejaInput)
-      .maybeSingle();
+    const emailLogin = gerarEmailSintetico(nomeInput, igrejaInput);
 
-    if (errIgreja || !igrejaData) {
-      alert("Igreja não encontrada. Verifique a sigla/código informado.");
+    // Login com o Supabase Auth
+    const { data: authData, error: authError } = await db.auth.signInWithPassword({
+      email: emailLogin,
+      password: senhaInput
+    });
+
+    if (authError || !authData.user) {
+      alert("Credenciais inválidas. Verifique a igreja, o nome e a palavra-passe.");
       return;
     }
 
-    if (igrejaData.status_assinatura === "inativa" || igrejaData.status_assinatura === "bloqueada") {
-      bloquearAcessoInadimplente("Acesso do ministério suspenso. Contacte a liderança.");
-      return;
-    }
+    // Limpa o campo de senha imediatamente
+    document.getElementById("login-input-senha").value = "";
 
-    // 2. Busca pelo nome EXATO e amarrado à igreja
-    const { data: membro, error: errMembro } = await db
+    // Busca o registro do membro vinculado com o user_id autenticado
+    const { data: membro, error: membroError } = await db
       .from("membros")
-      .select("*")
-      .eq("igreja", igrejaInput)
-      .ilike("nome", nomeInput) // Mantém case-insensitive mas sem curingas (%)
+      .select("*, igrejas(*)")
+      .eq("user_id", authData.user.id)
       .maybeSingle();
 
-    if (errMembro || !membro) {
-      alert("Músico não encontrado nesta igreja. Confirme a grafia do seu nome.");
+    if (membroError || !membro) {
+      alert("Perfil de membro não configurado no sistema.");
+      await db.auth.signOut();
       return;
     }
 
     if (membro.ativo === false) {
-      bloquearAcessoInadimplente(`Olá, ${membro.nome}. O seu acesso ao Scord encontra-se desativado.`);
+      bloquearAcessoInadimplente(`Olá, ${membro.nome}. O seu acesso ao Scord encontra-se inativo.`);
+      await db.auth.signOut();
       return;
     }
-
-    // 3. Validação estrita: SEM bypass de "1234" e SEM aceitar PIN de liderança
-    const senhaEsperada = (membro.senha || "").trim();
-    if (!senhaEsperada || senhaInput !== senhaEsperada) {
-      alert("Palavra-passe incorreta.");
-      return;
-    }
-
-    // Atualiza o contexto da igreja logada
-    CONFIG_IGREJA = {
-      id: igrejaData.id,
-      nome: igrejaData.nome,
-      codigo: igrejaData.codigo,
-      lider_nome: igrejaData.lider_nome,
-      pin_admin: igrejaData.pin_admin,
-      status_assinatura: igrejaData.status_assinatura,
-      configurada: true
-    };
 
     membroLogado = membro;
+    isAdmin = membro.is_lider === true;
     localStorage.setItem(AUTH_KEY, JSON.stringify(membro));
+    localStorage.setItem("scord_admin_ativo", isAdmin ? "true" : "false");
 
-    document.getElementById("login-input-senha").value = "";
+    if (membro.igrejas) {
+      CONFIG_IGREJA = {
+        id: membro.igrejas.id,
+        nome: membro.igrejas.nome,
+        codigo: membro.igrejas.codigo,
+        lider_nome: membro.igrejas.lider_nome,
+        status_assinatura: membro.igrejas.status_assinatura,
+        configurada: true
+      };
+    } else {
+      CONFIG_IGREJA = {
+        id: membro.igreja_id,
+        codigo: membro.igreja,
+        configurada: true
+      };
+    }
 
+    // Se for o primeiro acesso obrigando a troca de senha
     if (membro.primeiro_acesso === true) {
       document.getElementById("tela-login").classList.add("hidden");
       document.getElementById("modal-troca-senha-obrigatoria").classList.remove("hidden");
@@ -351,10 +362,11 @@ async function autenticarMembro(e) {
     }
 
     aplicarSessaoMembro();
-    carregarRepertorio(false);
+    await carregarRepertorio(false);
+
   } catch (err) {
-    console.error(err);
-    alert("Erro na validação do login.");
+    console.error("Erro na autenticação:", err);
+    alert("Falha de comunicação com o servidor.");
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
@@ -430,19 +442,22 @@ function aplicarSessaoMembro() {
   document.getElementById("conteudo-app").classList.remove("hidden");
 }
 
+// 3. LOGOUT LIMPO
 function deslogarMembro() {
-  if (confirm("Deseja terminar a sessão neste dispositivo?")) {
-    localStorage.removeItem(AUTH_KEY);
-    membroLogado = null;
-    isAdmin = false;
-    localStorage.removeItem("scord_admin_ativo");
+  if (confirm("Deseja terminar a sessão neste aparelho?")) {
+    db.auth.signOut().finally(() => {
+      localStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem("scord_admin_ativo");
+      membroLogado = null;
+      isAdmin = false;
 
-    const formLogin = document.getElementById("form-login-membro");
-    if (formLogin) formLogin.reset();
+      const formLogin = document.getElementById("form-login-membro");
+      if (formLogin) formLogin.reset();
 
-    document.getElementById("conteudo-app").classList.add("hidden");
-    document.getElementById("bloqueio-assinatura").classList.add("hidden");
-    exibirTelaLogin();
+      document.getElementById("conteudo-app").classList.add("hidden");
+      document.getElementById("bloqueio-assinatura").classList.add("hidden");
+      exibirTelaLogin();
+    });
   }
 }
 
@@ -1352,39 +1367,44 @@ async function redefinirAcessoMembro(id, nome) {
   await atualizarListaMembrosAdmin();
 }
 
+// 2. CADASTRO DE MÚSICO PELA EDGE FUNCTION (Sem deslogar o líder)
 async function adicionarNovoMembro(e) {
   e.preventDefault();
   const inputNome = document.getElementById("input-novo-membro-nome");
   const nome = inputNome.value.trim();
   if (!nome) return;
 
-  if (dadosCompletosMembros.some(m => m.nome.toLowerCase() === nome.toLowerCase())) {
-    alert("Integrante já registado nesta igreja.");
-    return;
-  }
+  const btn = document.querySelector("#form-novo-membro button[type='submit']");
+  if (btn) btn.disabled = true;
 
   const senhaGerada = gerarSenhaAleatoria();
 
-  const { error } = await db.from("membros").insert([{
-    nome: nome,
-    senha: senhaGerada,
-    primeiro_acesso: true,
-    ativo: true,
-    igreja: CONFIG_IGREJA.codigo || "VCD",
-    igreja_id: CONFIG_IGREJA.id,
-    is_lider: false
-  }]);
+  try {
+    const { data, error } = await db.functions.invoke('criar-membro', {
+      body: {
+        nome: nome,
+        igreja_codigo: CONFIG_IGREJA.codigo || 'VCD',
+        senha_provisoria: senhaGerada,
+        is_lider: false
+      }
+    });
 
-  if (error) {
-    alert("Erro ao registar membro: " + error.message);
-    return;
-  }
+    if (error || (data && data.error)) {
+      alert("Erro ao registar membro: " + (error?.message || data?.error));
+      return;
+    }
 
-  inputNome.value = "";
-  await atualizarListaMembrosAdmin();
+    inputNome.value = "";
+    await atualizarListaMembrosAdmin();
 
-  if (confirm(`Músico ${nome} registado! Palavra-passe: ${senhaGerada}\nDeseja abrir o WhatsApp para partilhar o acesso?`)) {
-    dispararAcessoWhatsApp(nome, senhaGerada);
+    if (confirm(`Músico ${nome} registado com sucesso!\nPalavra-passe provisória: ${senhaGerada}\n\nDeseja abrir o WhatsApp para partilhar o acesso?`)) {
+      dispararAcessoWhatsApp(nome, senhaGerada);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao invocar criação de membro.");
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
