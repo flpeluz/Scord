@@ -61,9 +61,11 @@ async function buscarTituloYouTube(url) {
 
 function gerarSenhaAleatoria() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const array = new Uint32Array(6);
+  crypto.getRandomValues(array);
   let resultado = "";
   for (let i = 0; i < 6; i++) {
-    resultado += chars.charAt(Math.floor(Math.random() * chars.length));
+    resultado += chars.charAt(array[i] % chars.length);
   }
   return resultado;
 }
@@ -273,39 +275,61 @@ async function autenticarMembro(e) {
 
   const btn = document.getElementById("btn-submit-login");
   btn.disabled = true;
-  btn.innerHTML = `<span>Validando...</span>`;
+  btn.innerHTML = `<span>A validar...</span>`;
 
   try {
-    const { data: membros, error } = await db
+    // 1. Valida se a igreja informada existe e está ativa
+    const { data: igrejaData, error: errIgreja } = await db
+      .from("igrejas")
+      .select("*")
+      .eq("codigo", igrejaInput)
+      .maybeSingle();
+
+    if (errIgreja || !igrejaData) {
+      alert("Igreja não encontrada. Verifique a sigla/código informado.");
+      return;
+    }
+
+    if (igrejaData.status_assinatura === "inativa" || igrejaData.status_assinatura === "bloqueada") {
+      bloquearAcessoInadimplente("Acesso do ministério suspenso. Contacte a liderança.");
+      return;
+    }
+
+    // 2. Busca pelo nome EXATO e amarrado à igreja
+    const { data: membro, error: errMembro } = await db
       .from("membros")
       .select("*")
-      .ilike("nome", `%${nomeInput}%`);
+      .eq("igreja", igrejaInput)
+      .ilike("nome", nomeInput) // Mantém case-insensitive mas sem curingas (%)
+      .maybeSingle();
 
-    if (error || !membros || membros.length === 0) {
-      alert("Músico não encontrado. Verifique o seu nome ou contacte a liderança.");
-      btn.disabled = false;
-      btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
-      if (window.lucide) lucide.createIcons();
+    if (errMembro || !membro) {
+      alert("Músico não encontrado nesta igreja. Confirme a grafia do seu nome.");
       return;
     }
-
-    const membro = membros[0];
 
     if (membro.ativo === false) {
-      bloquearAcessoInadimplente(`Olá, ${membro.nome}. O seu acesso ao Scord encontra-se suspenso.`);
+      bloquearAcessoInadimplente(`Olá, ${membro.nome}. O seu acesso ao Scord encontra-se desativado.`);
       return;
     }
 
+    // 3. Validação estrita: SEM bypass de "1234" e SEM aceitar PIN de liderança
     const senhaEsperada = (membro.senha || "").trim();
-    const senhaBate = (senhaInput === senhaEsperada) || (senhaInput === "1234") || (senhaInput === CONFIG_IGREJA.pin_admin);
-
-    if (!senhaBate) {
-      alert("Palavra-passe incorreta. Verifique a palavra-passe recebida no WhatsApp.");
-      btn.disabled = false;
-      btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
-      if (window.lucide) lucide.createIcons();
+    if (!senhaEsperada || senhaInput !== senhaEsperada) {
+      alert("Palavra-passe incorreta.");
       return;
     }
+
+    // Atualiza o contexto da igreja logada
+    CONFIG_IGREJA = {
+      id: igrejaData.id,
+      nome: igrejaData.nome,
+      codigo: igrejaData.codigo,
+      lider_nome: igrejaData.lider_nome,
+      pin_admin: igrejaData.pin_admin,
+      status_assinatura: igrejaData.status_assinatura,
+      configurada: true
+    };
 
     membroLogado = membro;
     localStorage.setItem(AUTH_KEY, JSON.stringify(membro));
@@ -321,7 +345,7 @@ async function autenticarMembro(e) {
     carregarRepertorio(false);
   } catch (err) {
     console.error(err);
-    alert("Erro ao validar login.");
+    alert("Erro na validação do login.");
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
@@ -1239,7 +1263,8 @@ async function atualizarListaMembrosAdmin() {
   try {
     const { data: membros } = await db
       .from("membros")
-      .select("*")
+      .select("id, nome, ativo, primeiro_acesso, igreja")
+      .eq("igreja", CONFIG_IGREJA.codigo || "VCD")
       .order("nome", { ascending: true });
 
     dadosCompletosMembros = membros || [];
@@ -1251,20 +1276,23 @@ async function atualizarListaMembrosAdmin() {
     }
 
     container.innerHTML = dadosCompletosMembros.map(m => {
-      const nome = m.nome;
-      const senha = m.senha || "1234";
+      const nomeSanitizado = m.nome.replace(/"/g, '&quot;');
+      const statusBadge = m.primeiro_acesso 
+        ? `<span class="text-[10px] text-amber-400">1º acesso pendente</span>` 
+        : `<span class="text-[10px] text-emerald-400">Ativo</span>`;
 
       return `
         <div class="flex items-center justify-between bg-slate-800/80 px-3 py-2 rounded-xl text-xs gap-2">
           <div class="flex-1 min-w-0">
-            <span class="text-slate-200 font-semibold block truncate">${nome}</span>
-            <span class="text-[10px] text-slate-400 font-mono">Palavra-passe: ${senha}</span>
+            <span class="text-slate-200 font-semibold block truncate">${nomeSanitizado}</span>
+            ${statusBadge}
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="dispararAcessoWhatsApp('${nome}', '${senha}')" title="Partilhar acesso no WhatsApp" class="w-8 h-8 rounded-lg bg-emerald-950/70 border border-emerald-500/40 hover:bg-emerald-900/60 active:scale-95 transition flex items-center justify-center">
-              <img src="assets/whatsapp.png" alt="WhatsApp" class="w-4 h-4 object-contain" />
+            <button onclick="redefinirAcessoMembro('${m.id}', '${nomeSanitizado}')" title="Gerar nova palavra-passe e enviar" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60 active:scale-95 transition flex items-center gap-1">
+              <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+              <span>Redefinir</span>
             </button>
-            <button onclick="excluirMembro('${nome}')" title="Remover integrante" class="text-rose-400 hover:text-rose-300 p-1.5">
+            <button onclick="excluirMembro('${nomeSanitizado}')" title="Remover integrante" class="text-rose-400 hover:text-rose-300 p-1.5">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
           </div>
@@ -1275,6 +1303,26 @@ async function atualizarListaMembrosAdmin() {
   } catch (e) {
     console.error("Erro ao listar membros:", e);
   }
+}
+
+// Nova função auxiliar para reset de credencial pontual
+async function redefinirAcessoMembro(id, nome) {
+  if (!confirm(`Deseja gerar uma nova palavra-passe provisória para ${nome}?`)) return;
+
+  const novaSenha = gerarSenhaAleatoria();
+  const { error } = await db
+    .from("membros")
+    .update({ senha: novaSenha, primeiro_acesso: true })
+    .eq("id", id)
+    .eq("igreja", CONFIG_IGREJA.codigo || "VCD");
+
+  if (error) {
+    alert("Erro ao redefinir credenciais: " + error.message);
+    return;
+  }
+
+  dispararAcessoWhatsApp(nome, novaSenha);
+  await atualizarListaMembrosAdmin();
 }
 
 async function adicionarNovoMembro(e) {
@@ -1312,9 +1360,14 @@ async function adicionarNovoMembro(e) {
 }
 
 async function excluirMembro(nome) {
-  if (!confirm(`Remover ${nome} da equipe de louvor?`)) return;
+  if (!confirm(`Remover ${nome} da equipa de louvor?`)) return;
 
-  const { error } = await db.from("membros").delete().eq("nome", nome);
+  const { error } = await db
+    .from("membros")
+    .delete()
+    .eq("nome", nome)
+    .eq("igreja", CONFIG_IGREJA.codigo || "VCD");
+
   if (error) {
     alert("Erro ao remover: " + error.message);
     return;
