@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Scord - Gestão de Louvor e Repertório</title>
 
   <link rel="manifest" href="manifest.json" />
@@ -21,7 +21,7 @@
 </head>
 <body class="min-h-screen pb-28 selection:bg-indigo-500 selection:text-white relative bg-[#0b1120] text-slate-100">
 
-  <!-- Ecrã de Login -->
+  <!-- Tela de Login -->
   <div id="tela-login" class="hidden fixed inset-0 z-50 bg-[#0b1120] flex flex-col items-center justify-center p-6">
     <div class="w-full max-w-sm flex flex-col items-center">
       
@@ -32,7 +32,7 @@
 
       <div class="bg-slate-900/90 border border-slate-800 p-6 rounded-3xl w-full shadow-2xl">
         <h2 class="text-base font-bold text-white mb-1 text-center">Entrar no Ministério</h2>
-        <p class="text-xs text-slate-400 mb-5 text-center">Indique os dados facultados pela liderança</p>
+        <p class="text-xs text-slate-400 mb-5 text-center">Informe os dados fornecidos pela liderança</p>
 
         <form id="form-login-membro" onsubmit="autenticarMembro(event)" autocomplete="off" class="space-y-3.5 text-xs">
           <div>
@@ -42,16 +42,16 @@
 
           <div>
             <label class="block text-slate-300 font-semibold mb-1">Nome *</label>
-            <input type="text" id="login-input-nome" placeholder="O seu nome..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500" />
+            <input type="text" id="login-input-nome" placeholder="Seu nome..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500" />
           </div>
 
           <div>
-            <label class="block text-slate-300 font-semibold mb-1">Palavra-passe *</label>
-            <input type="password" id="login-input-senha" autocomplete="new-password" placeholder="Digite a palavra-passe..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
+            <label class="block text-slate-300 font-semibold mb-1">Senha *</label>
+            <input type="password" id="login-input-senha" autocomplete="new-password" placeholder="Digite a senha..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
           </div>
 
           <button type="submit" id="btn-submit-login" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-            <span>Aceder ao Scord</span>
+            <span>Entrar no Scord</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
           
@@ -105,7 +105,7 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-400 font-semibold mb-1">Sua Palavra-passe *</label>
+            <label class="block text-slate-400 font-semibold mb-1">Sua Senha *</label>
             <input type="password" id="setup-input-senha" required minlength="6" placeholder="Para fazer login" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
           </div>
           <div>
@@ -165,22 +165,22 @@
       <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3 text-indigo-400">
         <i data-lucide="key-round" class="w-6 h-6"></i>
       </div>
-      <h2 class="text-base font-bold text-white mb-1">Redefinir Palavra-passe</h2>
-      <p class="text-xs text-slate-400 mb-4 leading-relaxed">Este é o seu primeiro acesso. Defina uma palavra-passe pessoal definitiva.</p>
+      <h2 class="text-base font-bold text-white mb-1">Redefinir Senha</h2>
+      <p class="text-xs text-slate-400 mb-4 leading-relaxed">Este é o seu primeiro acesso. Defina uma senha pessoal definitiva.</p>
 
       <form onsubmit="salvarNovaSenhaPrimeiroAcesso(event)" class="space-y-3 text-xs">
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Nova Palavra-passe *</label>
+          <label class="block text-slate-300 font-semibold mb-1">Nova Senha *</label>
           <input type="password" id="primeiro-input-senha-nova" minlength="6" required placeholder="Mínimo 6 caracteres..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
         </div>
         <div>
-          <label class="block text-slate-300 font-semibold mb-1">Confirmar Palavra-passe *</label>
-          <input type="password" id="primeiro-input-senha-confirma" minlength="6" required placeholder="Repita a palavra-passe..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
+          <label class="block text-slate-300 font-semibold mb-1">Confirmar Senha *</label>
+          <input type="password" id="primeiro-input-senha-confirma" minlength="6" required placeholder="Repita a senha..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-slate-100 outline-none focus:border-indigo-500 font-mono" />
         </div>
 
         <button type="submit" id="btn-submit-troca-senha" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
           <i data-lucide="check" class="w-4 h-4"></i>
-          <span>Guardar e Aceder</span>
+          <span>Salvar e Entrar</span>
         </button>
       </form>
     </div>
@@ -192,7 +192,7 @@
       <i data-lucide="shield-alert" class="w-8 h-8 text-rose-400"></i>
     </div>
     <h2 class="text-xl font-bold text-white mb-2">Acesso Suspenso</h2>
-    <p id="msg-bloqueio" class="text-xs text-slate-400 max-w-xs leading-relaxed mb-6">A subscrição do ministério encontra-se suspensa ou pendente.</p>
+    <p id="msg-bloqueio" class="text-xs text-slate-400 max-w-xs leading-relaxed mb-6">A assinatura do ministério está suspensa ou pendente.</p>
     <div class="flex flex-col gap-2 w-full max-w-xs">
       <button onclick="deslogarMembro()" class="text-xs text-slate-500 hover:text-slate-300 py-2">Mudar de Conta</button>
     </div>
@@ -218,7 +218,7 @@
         <button onclick="alternarModoAdmin()" id="btn-lock" title="Acesso da Liderança" class="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 hover:bg-slate-700 active:scale-95 transition flex items-center justify-center">
           <i data-lucide="lock" id="icon-lock" class="w-4 h-4 text-slate-400"></i>
         </button>
-        <button onclick="deslogarMembro()" title="Terminar sessão" class="w-9 h-9 rounded-xl bg-rose-950/40 border border-rose-500/30 hover:bg-rose-900/40 text-rose-400 active:scale-95 transition flex items-center justify-center">
+        <button onclick="deslogarMembro()" title="Sair" class="w-9 h-9 rounded-xl bg-rose-950/40 border border-rose-500/30 hover:bg-rose-900/40 text-rose-400 active:scale-95 transition flex items-center justify-center">
           <i data-lucide="log-out" class="w-4 h-4"></i>
         </button>
       </div>
@@ -246,7 +246,7 @@
     <button onclick="abrirModalNovoLouvor()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-2 rounded-2xl shadow-xl flex items-center justify-center gap-1 text-[11px] border border-indigo-400/30 active:scale-95 transition">
       <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Louvor
     </button>
-    <button onclick="abrirModalConfiguracoes()" title="Definições e Segurança" class="w-11 h-11 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-2xl shadow-xl flex items-center justify-center shrink-0 active:scale-95 transition">
+    <button onclick="abrirModalConfiguracoes()" title="Configurações e Segurança" class="w-11 h-11 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-2xl shadow-xl flex items-center justify-center shrink-0 active:scale-95 transition">
       <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
     </button>
   </div>
@@ -281,7 +281,7 @@
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div>
           <h3 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="calendar-plus" class="w-4 h-4 text-amber-400"></i> Criar Escala de Culto</h3>
-          <p class="text-[11px] text-slate-400">Marque os músicos e as respetivas funções</p>
+          <p class="text-[11px] text-slate-400">Marque os músicos e as respectivas funções</p>
         </div>
         <button onclick="fecharModalEscalarCulto()" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
@@ -305,7 +305,7 @@
         </div>
         <div class="flex items-center gap-2 mt-4 pt-2 border-t border-slate-800">
           <button type="submit" id="btn-submit-escala-culto" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl shadow-lg transition flex items-center justify-center gap-1.5">
-            <i data-lucide="check" class="w-4 h-4"></i> Guardar Culto na Programação
+            <i data-lucide="check" class="w-4 h-4"></i> Salvar Culto na Programação
           </button>
         </div>
       </form>
@@ -375,7 +375,7 @@
           <div><label class="block text-slate-300 font-semibold mb-1">Link do Spotify</label><input type="url" id="input-spotify" placeholder="https://open.spotify.com/track/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 outline-none focus:border-indigo-500" /></div>
         </div>
         <button type="submit" id="btn-submit-louvor" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-          <i data-lucide="save" class="w-4 h-4"></i> Guardar no Repertório
+          <i data-lucide="save" class="w-4 h-4"></i> Salvar no Repertório
         </button>
       </form>
     </div>
@@ -426,7 +426,7 @@
   <div id="modal-membros" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <h3 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-sky-400"></i> Músicos Registados</h3>
+        <h3 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-sky-400"></i> Músicos Cadastrados</h3>
         <button onclick="fecharModalMembros()" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="adicionarNovoMembro(event)" class="mt-4 flex gap-2">
@@ -444,7 +444,7 @@
   <div id="modal-configuracoes" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm p-4 overflow-y-auto flex items-center justify-center">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-5 shadow-2xl relative my-8">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <h3 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4 text-slate-400"></i> Definições do Ministério</h3>
+        <h3 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4 text-slate-400"></i> Configurações do Ministério</h3>
         <button onclick="fecharModalConfiguracoes()" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <div class="mt-4 space-y-4 text-xs">
@@ -458,7 +458,7 @@
         </div>
         <div class="bg-slate-800/60 border border-slate-700/50 p-3.5 rounded-2xl flex items-center justify-between">
           <div><span class="text-slate-200 font-bold block">Sessão Atual</span><span id="label-sessao-usuario" class="text-[11px] text-slate-400"></span></div>
-          <button onclick="deslogarMembro()" class="bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 px-3 py-1.5 rounded-xl font-bold transition text-xs">Terminar</button>
+          <button onclick="deslogarMembro()" class="bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 px-3 py-1.5 rounded-xl font-bold transition text-xs">Sair</button>
         </div>
       </div>
     </div>
