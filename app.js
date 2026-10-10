@@ -30,7 +30,7 @@ db.rpc = async (fn, args = {}) => {
     limparSessaoLocal();
     location.reload();
   } else if (msg.includes("assinatura_suspensa") && typeof bloquearAcessoInadimplente === "function") {
-    bloquearAcessoInadimplente("A assinatura desta igreja está suspensa. Contacte o responsável pelo app.");
+    bloquearAcessoInadimplente("A assinatura desta igreja está suspensa. Entre em contato com o responsável pelo app.");
   } else if (msg.includes("acesso_restrito")) {
     res.error = { message: "Modo líder expirado. Desbloqueie novamente com o PIN." };
     isAdmin = false;
@@ -245,7 +245,7 @@ async function gerarChaveClienteDono(e) {
 
   const btn = document.getElementById("btn-dono-gerar");
   btn.disabled = true;
-  btn.innerText = "A gerar chave...";
+  btn.innerText = "Gerando chave...";
 
   try {
     const { data, error } = await db.rpc('gerar_chave_mestre_app', {
@@ -286,7 +286,7 @@ function compartilharUltimaChaveZap() {
   texto += `Aqui está a sua chave exclusiva de ativação para configurar a sua igreja no Scord:\n\n`;
   texto += `🔑 *Chave de Ativação:* ${ultimaChaveGerada}\n`;
   texto += `🔗 *Link:* ${window.location.origin}\n\n`;
-  texto += `_Ao abrir o link, clique em "Primeiro acesso? Configurar novo ministério", insira esta chave e defina o código e os acessos da sua equipa._`;
+  texto += `_Ao abrir o link, clique em "Primeiro acesso? Configurar novo ministério", insira esta chave e defina o código e os acessos da sua equipe._`;
 
   const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
   window.open(url, "_blank");
@@ -299,7 +299,7 @@ async function executarSetupInicial(e) {
   e.preventDefault();
   const btn = document.getElementById("btn-submit-setup");
   btn.disabled = true;
-  btn.innerText = "A configurar no banco de dados...";
+  btn.innerText = "Configurando no banco de dados...";
 
   const chave = document.getElementById("setup-input-chave").value.trim();
   const nomeIgreja = document.getElementById("setup-input-nome-igreja").value.trim();
@@ -323,7 +323,7 @@ async function executarSetupInicial(e) {
       return;
     }
 
-    alert(`Ministério "${nomeIgreja}" criado com sucesso!\nCódigo da Igreja: ${sigla}\nFaça o login com o seu nome e palavra-passe.`);
+    alert(`Ministério "${nomeIgreja}" criado com sucesso!\nCódigo da Igreja: ${sigla}\nFaça o login com o seu nome e senha.`);
 
     document.getElementById("modal-setup-inicial").classList.add("hidden");
     document.getElementById("login-input-igreja").value = sigla;
@@ -395,7 +395,7 @@ async function autenticarMembro(e) {
 
   const btn = document.getElementById("btn-submit-login");
   btn.disabled = true;
-  btn.innerHTML = `<span>A verificar credenciais...</span>`;
+  btn.innerHTML = `<span>Verificando credenciais...</span>`;
 
   try {
     const { data, error } = await db.rpc('login_membro', {
@@ -446,7 +446,7 @@ async function autenticarMembro(e) {
     alert("Falha na comunicação com o banco.");
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<span>Aceder ao Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+    btn.innerHTML = `<span>Entrar no Scord</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
     if (window.lucide) lucide.createIcons();
   }
 }
@@ -458,7 +458,7 @@ async function salvarNovaSenhaPrimeiroAcesso(e) {
   const senhaNova = inputNova.value.trim();
 
   if (senhaNova !== inputConfirma.value.trim()) {
-    alert("As palavras-passe não coincidem.");
+    alert("As senhas não coincidem.");
     return;
   }
 
@@ -477,7 +477,7 @@ async function salvarNovaSenhaPrimeiroAcesso(e) {
   document.getElementById("modal-troca-senha-obrigatoria").classList.add("hidden");
   aplicarSessaoMembro();
   await carregarRepertorio(false);
-  alert("Palavra-passe pessoal definida com sucesso!");
+  alert("Senha pessoal definida com sucesso!");
 }
 
 function aplicarSessaoMembro() {
@@ -493,7 +493,7 @@ function aplicarSessaoMembro() {
 }
 
 function deslogarMembro() {
-  if (confirm("Deseja terminar a sessão neste aparelho?")) {
+  if (confirm("Deseja sair deste aparelho?")) {
     db.rpc("logout_sessao", {}).catch(() => {});
     limparSessaoLocal();
     membroLogado = null;
@@ -583,12 +583,12 @@ function atualizarInterfaceAdmin() {
 function dispararAcessoWhatsApp(nome, senhaProvisoria) {
   const igrejaCodigo = CONFIG_IGREJA.codigo || "SCORD";
   let texto = `*Acesso ao Scord - Ministério de Louvor* \n\n`;
-  texto += `Olá, *${nome}*! Segue o teu acesso individual ao aplicativo de louvor e escalas:\n\n`;
+  texto += `Olá, *${nome}*! Segue o seu acesso individual ao aplicativo de louvor e escalas:\n\n`;
   texto += `🔗 *Link:* ${window.location.origin}\n`;
   texto += `⛪ *Código da Igreja:* ${igrejaCodigo}\n`;
   texto += `👤 *Nome:* ${nome}\n`;
-  texto += `🔑 *Palavra-passe Temporária:* ${senhaProvisoria}\n\n`;
-  texto += `_No primeiro acesso, a aplicação solicitará a criação da tua palavra-passe definitiva._`;
+  texto += `🔑 *Senha Temporária:* ${senhaProvisoria}\n\n`;
+  texto += `_No primeiro acesso, a aplicação solicitará a criação da sua senha definitiva._`;
 
   const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
   window.open(url, "_blank");
@@ -667,7 +667,7 @@ function dispararZapEscalaIndividual(nomeMembro) {
   escalasDoMembro.sort((a, b) => a.ordem - b.ordem);
 
   let texto = `*Paz, ${nomeMembro}!* \n\n`;
-  texto += `Segue a tua escala de louvor para *${mesAtual}*:\n\n`;
+  texto += `Segue a sua escala de louvor para *${mesAtual}*:\n\n`;
 
   escalasDoMembro.forEach(item => {
     texto += `*${item.data} (${item.dia})* - ${item.funcao}\n`;
@@ -738,7 +738,7 @@ function abrirModalConsultaEscala() {
   if (isAdmin) {
     seletor.disabled = false;
     seletor.classList.remove("opacity-60", "cursor-not-allowed");
-    seletor.innerHTML = `<option value="TODOS">Equipa Completa (Todos os Cultos)</option>` + 
+    seletor.innerHTML = `<option value="TODOS">Equipe Completa (Todos os Cultos)</option>` + 
       lista.map(m => `<option value="${m}">${m}</option>`).join("");
 
     if (membroLogado && lista.includes(membroLogado.nome)) {
@@ -788,7 +788,7 @@ function renderizarVisualizacaoEscalaMensal() {
   });
   
   if (escalasFiltradas.length === 0) {
-    container.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Nenhuma escala registada para ${mesAtual}.</p>`;
+    container.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Nenhuma escala cadastrada para ${mesAtual}.</p>`;
     return;
   }
 
@@ -843,7 +843,7 @@ async function abrirModalEscalarCulto() {
   }
 
   if (todosMembros.length === 0) {
-    alert("Registe integrantes no botão 'Músicos' primeiro.");
+    alert("Cadastre integrantes no botão 'Músicos' primeiro.");
     return;
   }
 
@@ -917,7 +917,7 @@ async function salvarEscalaCultoData(e) {
   e.preventDefault();
   const btn = document.getElementById("btn-submit-escala-culto");
   btn.disabled = true;
-  btn.innerText = "A guardar culto...";
+  btn.innerText = "Salvando culto...";
 
   const dataIso = document.getElementById("escala-input-data").value;
   const [ano, mes, dia] = dataIso.split("-");
@@ -943,13 +943,13 @@ async function salvarEscalaCultoData(e) {
 
     fecharModalEscalarCulto();
     await carregarRepertorio(true);
-    alert(`Culto de ${diaSemana} (${dataFmt}) guardado com sucesso!`);
+    alert(`Culto de ${diaSemana} (${dataFmt}) salvo com sucesso!`);
   } catch (err) {
     console.error("Erro ao gravar escala:", err);
     alert("Erro ao gravar escala.");
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Guardar Culto na Programação`;
+    btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Salvar Culto na Programação`;
     if (window.lucide) lucide.createIcons();
   }
 }
@@ -1012,7 +1012,7 @@ function fecharModalEditarEquipeDia() {
 async function salvarAlteracaoEquipeDia() {
   const btn = document.getElementById("btn-salvar-equipe-dia");
   btn.disabled = true;
-  btn.innerText = "A atualizar equipe...";
+  btn.innerText = "Atualizando equipe...";
 
   const lista = [];
   document.querySelectorAll(".check-membro-equipe-dia").forEach((chk, idx) => {
@@ -1036,7 +1036,7 @@ async function salvarAlteracaoEquipeDia() {
     await carregarRepertorio(true);
   } catch (err) {
     console.error("Erro ao atualizar equipe:", err);
-    alert("Erro ao guardar alterações da equipe.");
+    alert("Erro ao salvar alterações da equipe.");
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Atualizar Equipe`;
@@ -1111,7 +1111,7 @@ async function salvarNovoLouvor(e) {
     alert("Erro ao gravar louvor.");
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Guardar no Repertório`;
+    btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Salvar no Repertório`;
     if (window.lucide) lucide.createIcons();
   }
 }
@@ -1124,7 +1124,7 @@ function abrirModalEditarCulto(dataTexto, diaSemana) {
 
   const container = document.getElementById("lista-louvores-culto-edicao");
   if (louvoresDesteCulto.length === 0) {
-    container.innerHTML = `<p class="text-xs text-slate-500 py-2">Sem louvores registados para este culto.</p>`;
+    container.innerHTML = `<p class="text-xs text-slate-500 py-2">Sem louvores cadastrados para este culto.</p>`;
   } else {
     container.innerHTML = louvoresDesteCulto.map(m => {
       const tit = obterCampo(m, ["titulo", "título", "titulo_final"]) || "Louvor";
@@ -1183,7 +1183,7 @@ async function salvarAlteracaoLouvor(e) {
   e.preventDefault();
   const btn = document.getElementById("btn-submit-edit-louvor");
   btn.disabled = true;
-  btn.innerText = "A atualizar...";
+  btn.innerText = "Atualizando...";
 
   const id = document.getElementById("edit-id-musica").value;
   const linkYt = document.getElementById("edit-yt").value.trim();
@@ -1249,7 +1249,7 @@ async function atualizarListaMembrosAdmin() {
     todosMembros = dadosCompletosMembros.map(m => m.nome);
 
     if (dadosCompletosMembros.length === 0) {
-      container.innerHTML = `<p class="text-xs text-slate-500 py-2">Nenhum membro registado.</p>`;
+      container.innerHTML = `<p class="text-xs text-slate-500 py-2">Nenhum membro cadastrado.</p>`;
       return;
     }
 
@@ -1267,7 +1267,7 @@ async function atualizarListaMembrosAdmin() {
             ${statusBadge}
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="redefinirAcessoMembro('${m.id}', '${nomeSanitizado}')" title="Gerar nova palavra-passe e enviar" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60 active:scale-95 transition flex items-center gap-1">
+            <button onclick="redefinirAcessoMembro('${m.id}', '${nomeSanitizado}')" title="Gerar nova senha e enviar" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60 active:scale-95 transition flex items-center gap-1">
               <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
               <span>Redefinir</span>
             </button>
@@ -1285,7 +1285,7 @@ async function atualizarListaMembrosAdmin() {
 }
 
 async function redefinirAcessoMembro(id, nome) {
-  if (!confirm(`Deseja gerar uma nova palavra-passe provisória para ${nome}?`)) return;
+  if (!confirm(`Deseja gerar uma nova senha provisória para ${nome}?`)) return;
 
   const novaSenha = gerarSenhaAleatoria();
   const { data, error } = await db.rpc('redefinir_senha_membro_seguro', {
@@ -1336,7 +1336,7 @@ async function adicionarNovoMembro(e) {
     inputNome.value = "";
     await atualizarListaMembrosAdmin();
 
-    if (confirm(`Músico ${nome} registado com sucesso!\nPalavra-passe: ${senhaGerada}\n\nDeseja enviar os dados de acesso por WhatsApp?`)) {
+    if (confirm(`Músico ${nome} cadastrado com sucesso!\nSenha: ${senhaGerada}\n\nDeseja enviar os dados de acesso por WhatsApp?`)) {
       dispararAcessoWhatsApp(nome, senhaGerada);
     }
   } catch (err) {
@@ -1348,7 +1348,7 @@ async function adicionarNovoMembro(e) {
 }
 
 async function excluirMembro(nome) {
-  if (!confirm(`Remover ${nome} da equipa de louvor?`)) return;
+  if (!confirm(`Remover ${nome} da equipe de louvor?`)) return;
 
   const { data, error } = await db.rpc('excluir_musico_seguro', {
     p_igreja_id: CONFIG_IGREJA.id,
@@ -1649,7 +1649,7 @@ function renderizarCards() {
       cardsHtml = `
         <div class="col-span-full py-8 px-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl text-center">
           <i data-lucide="music" class="w-6 h-6 text-slate-600 mx-auto mb-2"></i>
-          <p class="text-xs text-slate-400 font-medium">Escala definida, a aguardar louvores do culto.</p>
+          <p class="text-xs text-slate-400 font-medium">Escala definida, aguardando louvores do culto.</p>
         </div>
       `;
     } else {
