@@ -5,6 +5,46 @@ const SUPABASE_URL = "https://rpqcochkumiwqhsvaxbn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_zes3bxMmZ2T5OCb_6Ep2dA_JlBn8t-I";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ==========================================
+// CAMADA DE SEGURANÇA: token de sessão + tratamento de erros do servidor
+// ==========================================
+const TOKEN_KEY = "scord_token";
+const _rpcOriginal = db.rpc.bind(db);
+const RPC_PUBLICAS = ["login_membro", "inicializar_igreja", "gerar_chave_mestre_app"];
+
+function limparSessaoLocal() {
+  localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem("scord_admin_ativo");
+  localStorage.removeItem(CACHE_KEY);
+  sessionStorage.removeItem(PIN_SESSION_KEY);
+}
+
+db.rpc = async (fn, args = {}) => {
+  const payload = RPC_PUBLICAS.includes(fn)
+    ? args
+    : { ...args, p_token: localStorage.getItem(TOKEN_KEY) || "" };
+  const res = await _rpcOriginal(fn, payload);
+  const msg = (res.error && res.error.message) || "";
+  if (msg.includes("sessao_invalida")) {
+    limparSessaoLocal();
+    location.reload();
+  } else if (msg.includes("assinatura_suspensa") && typeof bloquearAcessoInadimplente === "function") {
+    bloquearAcessoInadimplente("A assinatura desta igreja está suspensa. Contacte o responsável pelo app.");
+  } else if (msg.includes("acesso_restrito")) {
+    res.error = { message: "Modo líder expirado. Desbloqueie novamente com o PIN." };
+    isAdmin = false;
+    PIN_LIDER_VALIDADO = null;
+    sessionStorage.removeItem(PIN_SESSION_KEY);
+  }
+  return res;
+};
+
+async function rpcSimples(fn, args) {
+  const { data, error } = await db.rpc(fn, args);
+  return { data, error: error || (data && data.sucesso === false ? { message: data.erro } : null) };
+}
+
 const CACHE_KEY = "scord_app_cache_v9";
 const AUTH_KEY = "scord_membro_logado";
 const PIN_SESSION_KEY = "scord_pin_lider_sessao";
@@ -37,7 +77,7 @@ let timerToques = null;
 let ultimaChaveGerada = "";
 let ultimoClienteGerado = "";
 let chaveMasterTemporaria = null;
-let MASTER_SECRET_SESSAO = sessionStorage.getItem("scord_master_secret") || null;
+let MASTER_SECRET_SESSAO = null;
 
 const NOMES_MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -390,6 +430,7 @@ async function autenticarMembro(e) {
     };
 
     localStorage.setItem(AUTH_KEY, JSON.stringify(membroLogado));
+    localStorage.setItem(TOKEN_KEY, data.token);
 
     if (data.primeiro_acesso) {
       document.getElementById("tela-login").classList.add("hidden");
@@ -453,9 +494,8 @@ function aplicarSessaoMembro() {
 
 function deslogarMembro() {
   if (confirm("Deseja terminar a sessão neste aparelho?")) {
-    localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem("scord_admin_ativo");
-    sessionStorage.removeItem(PIN_SESSION_KEY);
+    db.rpc("logout_sessao", {}).catch(() => {});
+    limparSessaoLocal();
     membroLogado = null;
     isAdmin = false;
     PIN_LIDER_VALIDADO = null;
@@ -506,8 +546,8 @@ async function alternarModoAdmin() {
       }
 
       isAdmin = true;
-      PIN_LIDER_VALIDADO = pin.trim();
-      sessionStorage.setItem(PIN_SESSION_KEY, PIN_LIDER_VALIDADO);
+      PIN_LIDER_VALIDADO = "ok";
+      sessionStorage.setItem(PIN_SESSION_KEY, "ok");
 
       atualizarInterfaceAdmin();
       renderizarCards();
@@ -671,8 +711,8 @@ async function salvarNovoPinAdmin() {
   if (error || !data || !data.sucesso) {
     alert("Erro ao gravar PIN: " + ((data && data.erro) || error?.message));
   } else {
-    PIN_LIDER_VALIDADO = novoPin;
-    sessionStorage.setItem(PIN_SESSION_KEY, novoPin);
+    PIN_LIDER_VALIDADO = "ok";
+    sessionStorage.setItem(PIN_SESSION_KEY, "ok");
     alert("PIN do cadeado atualizado com sucesso!");
     fecharModalConfiguracoes();
   }
@@ -794,11 +834,8 @@ function renderizarVisualizacaoEscalaMensal() {
 async function abrirModalEscalarCulto() {
   // Se a lista estiver vazia na memória, tenta carregar imediatamente do banco
   if (todosMembros.length === 0 && CONFIG_IGREJA.id) {
-    const { data: membros } = await db
-      .from("membros")
-      .select("nome")
-      .eq("igreja_id", CONFIG_IGREJA.id)
-      .order("nome", { ascending: true });
+    const { data: _repM } = await db.rpc('carregar_repertorio', {});
+    const membros = _repM && _repM.membros;
 
     if (membros && membros.length > 0) {
       todosMembros = membros.map(m => m.nome);
@@ -901,41 +938,8 @@ async function salvarEscalaCultoData(e) {
   const equipeTexto = lista.join(", ");
 
   try {
-    const { data: existente } = await db
-      .from("escalas")
-      .select("id")
-      .eq("data", dataFmt)
-      .eq("igreja_id", CONFIG_IGREJA.id)
-      .maybeSingle();
-
-    if (existente && existente.id) {
-      await db
-        .from("escalas")
-        .update({
-          dia: diaSemana,
-          mes_ano: mesAno,
-          integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo
-        })
-        .eq("id", existente.id);
-    } else {
-      await db
-        .from("escalas")
-        .insert([{
-          data: dataFmt,
-          dia: diaSemana,
-          mes_ano: mesAno,
-          integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo,
-          igreja_id: CONFIG_IGREJA.id
-        }]);
-    }
-
-    await db
-      .from("musicas")
-      .update({ integrantes: equipeTexto })
-      .eq("data", dataFmt)
-      .eq("igreja_id", CONFIG_IGREJA.id);
+    const _r = await rpcSimples('salvar_escala', { p_data: dataFmt, p_dia: diaSemana, p_mes_ano: mesAno, p_integrantes: equipeTexto });
+    if (_r.error) throw new Error(_r.error.message);
 
     fecharModalEscalarCulto();
     await carregarRepertorio(true);
@@ -1025,39 +1029,8 @@ async function salvarAlteracaoEquipeDia() {
   const info = parseDataInfo(dataEquipeEmEdicao);
 
   try {
-    const { data: existente } = await db
-      .from("escalas")
-      .select("id")
-      .eq("data", dataEquipeEmEdicao)
-      .eq("igreja_id", CONFIG_IGREJA.id)
-      .maybeSingle();
-
-    if (existente && existente.id) {
-      await db
-        .from("escalas")
-        .update({
-          integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo
-        })
-        .eq("id", existente.id);
-    } else {
-      await db
-        .from("escalas")
-        .insert([{
-          data: dataEquipeEmEdicao,
-          dia: diaSemanaEquipeEmEdicao,
-          mes_ano: info.mesAno,
-          integrantes: equipeTexto,
-          igreja: CONFIG_IGREJA.codigo,
-          igreja_id: CONFIG_IGREJA.id
-        }]);
-    }
-
-    await db
-      .from("musicas")
-      .update({ integrantes: equipeTexto })
-      .eq("data", dataEquipeEmEdicao)
-      .eq("igreja_id", CONFIG_IGREJA.id);
+    const _r = await rpcSimples('salvar_escala', { p_data: dataEquipeEmEdicao, p_dia: diaSemanaEquipeEmEdicao, p_mes_ano: info.mesAno, p_integrantes: equipeTexto });
+    if (_r.error) throw new Error(_r.error.message);
 
     fecharModalEditarEquipeDia();
     await carregarRepertorio(true);
@@ -1125,7 +1098,7 @@ async function salvarNovoLouvor(e) {
   };
 
   try {
-    const { error } = await db.from("musicas").insert([registro]);
+    const { error } = await rpcSimples('salvar_louvor', { p_registro: registro });
 
     if (error) {
       alert("Erro ao gravar louvor: " + error.message);
@@ -1227,7 +1200,7 @@ async function salvarAlteracaoLouvor(e) {
     link_spotify: document.getElementById("edit-spotify").value.trim()
   };
 
-  const { error } = await db.from("musicas").update(updates).eq("id", id);
+  const { error } = await rpcSimples('atualizar_louvor', { p_id: id, p_dados: updates });
 
   if (error) {
     alert("Erro ao atualizar: " + error.message);
@@ -1245,7 +1218,7 @@ async function salvarAlteracaoLouvor(e) {
 async function excluirLouvor(id) {
   if (!confirm("Remover este louvor da escala?")) return;
 
-  const { error } = await db.from("musicas").delete().eq("id", id);
+  const { error } = await rpcSimples('excluir_louvor', { p_id: id });
   if (error) {
     alert("Erro ao remover: " + error.message);
   } else {
@@ -1269,11 +1242,8 @@ function fecharModalMembros() {
 async function atualizarListaMembrosAdmin() {
   const container = document.getElementById("lista-membros-cadastrados");
   try {
-    const { data: membros } = await db
-      .from("membros")
-      .select("id, nome, ativo, primeiro_acesso, is_lider, igreja_id")
-      .eq("igreja_id", CONFIG_IGREJA.id)
-      .order("nome", { ascending: true });
+    const { data: _repM } = await db.rpc('carregar_repertorio', {});
+    const membros = _repM && _repM.membros;
 
     dadosCompletosMembros = membros || [];
     todosMembros = dadosCompletosMembros.map(m => m.nome);
@@ -1497,19 +1467,11 @@ async function carregarRepertorio(forcado = false) {
   if (!CONFIG_IGREJA.id) return;
 
   try {
-    const [respMusicas, respMembros, respEscalas] = await Promise.all([
-      db.from("musicas")
-        .select("*")
-        .eq("igreja_id", CONFIG_IGREJA.id)
-        .order("ordem", { ascending: true }),
-      db.from("membros")
-        .select("*")
-        .eq("igreja_id", CONFIG_IGREJA.id)
-        .order("nome", { ascending: true }),
-      db.from("escalas")
-        .select("*")
-        .eq("igreja_id", CONFIG_IGREJA.id)
-    ]);
+    const _rep = await db.rpc('carregar_repertorio', {});
+    const _d = _rep.data || {};
+    const respMusicas = { data: _d.musicas, error: _rep.error };
+    const respMembros = { data: _d.membros, error: _rep.error };
+    const respEscalas = { data: _d.escalas, error: _rep.error };
 
     if (respMusicas.error) console.error("Erro músicas:", respMusicas.error);
     if (respMembros.error) console.error("Erro membros:", respMembros.error);
